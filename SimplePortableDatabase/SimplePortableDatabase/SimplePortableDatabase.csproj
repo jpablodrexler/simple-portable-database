@@ -1,7 +1,18 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>0.7.3.1</Version>
+    <Authors>Juan Pablo Drexler</Authors>
+    <Company />
+    <Product>Simple Portable Database</Product>
+    <Title>Simple Portable Database</Title>
+    <RepositoryUrl>https://github.com/jpablodrexler/simple-portable-database</RepositoryUrl>
+    <Description>Simple Portable Database is a library that provides a convenient way to store tabular and binary data in a local directory. The library uses csv and binary files to enable a simple persistence mechanism for local applications.</Description>
+    <PackageTags>database csv portable</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/jpablodrexler/simple-portable-database</PackageProjectUrl>
   </PropertyGroup>
 
 </Project>
