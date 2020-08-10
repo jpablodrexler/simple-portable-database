@@ -2,6 +2,7 @@ using FluentAssertions;
 using System;
 using System.Data;
 using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using Xunit;
 
@@ -9,7 +10,6 @@ namespace SimplePortableDatabase.Tests
 {
     public class DatabaseTest
     {
-        private const int BLOB_OFFSET = 27;
         private string dataDirectory;
         
         public DatabaseTest()
@@ -36,7 +36,6 @@ namespace SimplePortableDatabase.Tests
             string expected = "FolderId;FileName;FileSize;ImageRotation;PixelWidth;PixelHeight;ThumbnailPixelWidth;ThumbnailPixelHeight;ThumbnailCreationDateTime;Hash\r\n" +
                 "876283c6-780e-4ad5-975c-be63044c087a;20200720175810_3.jpg;363888;Rotate0;1920;1080;200;112;25/07/2020 9:45:47;4e50d5c7f1a64b5d61422382ac822641ad4e5b943aca9ade955f4655f799558bb0ae9c342ee3ead0949b32019b25606bd16988381108f56bb6c6dd673edaa1e4\r\n" +
                 "876283c6-780e-4ad5-975c-be63044c087a;20200720175816_3.jpg;343633;Rotate0;1920;1080;200;112;25/07/2020 9:45:47;0af8f118b7d606e5d174643727bd3c0c6028b52c50481585274fd572110b108c7a0d7901227f75a72b44c89335e002a65e8137ff5b238ab1c0bba0505e783124\r\n";
-
             string tableName = "assets" + Guid.NewGuid();
             string filePath = Path.Combine("TestData", "Tables", tableName + ".db");
 
@@ -97,7 +96,6 @@ namespace SimplePortableDatabase.Tests
             string csv = "FolderId;FileName;FileSize;ImageRotation;PixelWidth;PixelHeight;ThumbnailPixelWidth;ThumbnailPixelHeight;ThumbnailCreationDateTime;Hash\r\n" +
                 "876283c6-780e-4ad5-975c-be63044c087a;20200720175810_3.jpg;363888;Rotate0;1920;1080;200;112;25/07/2020 9:45:47;4e50d5c7f1a64b5d61422382ac822641ad4e5b943aca9ade955f4655f799558bb0ae9c342ee3ead0949b32019b25606bd16988381108f56bb6c6dd673edaa1e4\r\n" +
                 "876283c6-780e-4ad5-975c-be63044c087a;20200720175816_3.jpg;343633;Rotate0;1920;1080;200;112;25/07/2020 9:45:47;0af8f118b7d606e5d174643727bd3c0c6028b52c50481585274fd572110b108c7a0d7901227f75a72b44c89335e002a65e8137ff5b238ab1c0bba0505e783124\r\n";
-
             string tableName = "assets" + Guid.NewGuid();
             string filePath = Path.Combine("TestData", "Tables", tableName + ".db");
 
@@ -158,7 +156,6 @@ namespace SimplePortableDatabase.Tests
         public void WriteBlobTest(string encodingName, string message)
         {
             byte[] expected = Encoding.GetEncoding(encodingName).GetBytes(message);
-
             string blobName = "blob" + Guid.NewGuid() + ".bin";
             string filePath = Path.Combine("TestData", "Blobs", blobName);
 
@@ -169,12 +166,65 @@ namespace SimplePortableDatabase.Tests
             portableDatabase.Diagnostics.LastWriteFilePath.Should().Be(filePath);
             portableDatabase.Diagnostics.LastWriteFileRaw.Should().Be(expected);
 
-            byte[] content = File.ReadAllBytes(filePath);
+            byte[] blob;
 
-            for (int i = 0; i < expected.Length; i++)
+            using (FileStream fileStream = new FileStream(filePath, FileMode.Open))
             {
-                content[i + BLOB_OFFSET].Should().Be(expected[i]);
+                BinaryFormatter binaryFormatter = new BinaryFormatter();
+                blob = (byte[])binaryFormatter.Deserialize(fileStream);
             }
+
+            blob.Should().HaveSameCount(expected);
+            blob.Should().ContainInOrder(expected);
+        }
+
+        [Theory]
+        [InlineData("utf-8", "Hello world")]
+        [InlineData("utf-32", "Hello world")]
+        [InlineData("us-ascii", "Hello world")]
+        [InlineData("utf-8", "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.")]
+        [InlineData("utf-32", "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.")]
+        [InlineData("us-ascii", "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.")]
+        public void ReadBlobTest(string encodingName, string message)
+        {
+            byte[] expected = Encoding.GetEncoding(encodingName).GetBytes(message);
+            string blobName = "blob" + Guid.NewGuid() + ".bin";
+            string filePath = Path.Combine("TestData", "Blobs", blobName);
+
+            using (FileStream fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                BinaryFormatter binaryFormatter = new BinaryFormatter();
+                binaryFormatter.Serialize(fileStream, expected);
+            }
+
+            Database portableDatabase = new Database();
+            portableDatabase.Initialize("TestData", ';');
+            byte[] blob = (byte[])portableDatabase.ReadBlob(blobName);
+            portableDatabase.Diagnostics.LastReadFilePath.Should().Be(filePath);
+            
+            blob.Should().HaveSameCount(expected);
+            blob.Should().ContainInOrder(expected);
+        }
+
+        [Theory]
+        [InlineData("utf-8", "Hello world")]
+        [InlineData("utf-32", "Hello world")]
+        [InlineData("us-ascii", "Hello world")]
+        [InlineData("utf-8", "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.")]
+        [InlineData("utf-32", "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.")]
+        [InlineData("us-ascii", "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.")]
+        public void WriteAndReadBlobTest(string encodingName, string message)
+        {
+            byte[] expected = Encoding.GetEncoding(encodingName).GetBytes(message);
+            string blobName = "blob" + Guid.NewGuid() + ".bin";
+
+            Database portableDatabase = new Database();
+            portableDatabase.Initialize("TestData", ';');
+            portableDatabase.WriteBlob(expected, blobName);
+            byte[] blob = (byte[])portableDatabase.ReadBlob(blobName);
+            
+            blob.Should().HaveSameCount(expected);
+            blob.Should().ContainInOrder(expected);
         }
     }
 }
