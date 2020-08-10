@@ -11,8 +11,6 @@ namespace SimplePortableDatabase
         DataTable ReadDataTable(string tableName);
         void WriteDataTable(DataTable dataTable);
         string GetBlobsDirectory(string dataDirectory);
-        string GetCsvFromDataTable(DataTable table, char separator);
-        DataTable GetDataTableFromCsv(string csv, char separator, string tableName);
         string GetTablesDirectory(string dataDirectory);
         void InitializeDirectory(string dataDirectory);
         object ReadBlob(string blobName);

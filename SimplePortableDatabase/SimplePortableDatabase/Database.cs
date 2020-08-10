@@ -59,7 +59,7 @@ namespace SimplePortableDatabase
             WriteToBinaryFile(blob, blobFilePath);
         }
 
-        public string GetCsvFromDataTable(DataTable table, char separator)
+        private string GetCsvFromDataTable(DataTable table, char separator)
         {
             StringBuilder builder = new StringBuilder();
             string[] headers = new string[table.Columns.Count];
@@ -81,7 +81,7 @@ namespace SimplePortableDatabase
             return builder.ToString();
         }
 
-        public DataTable GetDataTableFromCsv(string csv, char separator, string tableName)
+        private DataTable GetDataTableFromCsv(string csv, char separator, string tableName)
         {
             DataTable table = new DataTable(tableName);
 
