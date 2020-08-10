@@ -2,12 +2,14 @@ using FluentAssertions;
 using System;
 using System.Data;
 using System.IO;
+using System.Text;
 using Xunit;
 
 namespace SimplePortableDatabase.Tests
 {
     public class DatabaseTest
     {
+        private const int BLOB_OFFSET = 27;
         private string dataDirectory;
         
         public DatabaseTest()
@@ -144,6 +146,35 @@ namespace SimplePortableDatabase.Tests
 
             portableDatabase.Diagnostics.LastReadFilePath.Should().Be(filePath);
             portableDatabase.Diagnostics.LastReadFileRaw.Should().Be(csv);
+        }
+
+        [Theory]
+        [InlineData("utf-8", "Hello world")]
+        [InlineData("utf-32", "Hello world")]
+        [InlineData("us-ascii", "Hello world")]
+        [InlineData("utf-8", "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.")]
+        [InlineData("utf-32", "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.")]
+        [InlineData("us-ascii", "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.")]
+        public void WriteBlobTest(string encodingName, string message)
+        {
+            byte[] expected = Encoding.GetEncoding(encodingName).GetBytes(message);
+
+            string blobName = "blob" + Guid.NewGuid() + ".bin";
+            string filePath = Path.Combine("TestData", "Blobs", blobName);
+
+            Database portableDatabase = new Database();
+            portableDatabase.Initialize("TestData", ';');
+            portableDatabase.WriteBlob(expected, blobName);
+
+            portableDatabase.Diagnostics.LastWriteFilePath.Should().Be(filePath);
+            portableDatabase.Diagnostics.LastWriteFileRaw.Should().Be(expected);
+
+            byte[] content = File.ReadAllBytes(filePath);
+
+            for (int i = 0; i < expected.Length; i++)
+            {
+                content[i + BLOB_OFFSET].Should().Be(expected[i]);
+            }
         }
     }
 }
