@@ -164,9 +164,9 @@ namespace SimplePortableDatabase
             return Path.Combine(GetTablesDirectory(dataDirectory), fileName);
         }
 
-        public string ResolveBlobFilePath(string dataDirectory, string thumbnailsFileName)
+        public string ResolveBlobFilePath(string dataDirectory, string blobName)
         {
-            return Path.Combine(GetBlobsDirectory(dataDirectory), thumbnailsFileName);
+            return Path.Combine(GetBlobsDirectory(dataDirectory), blobName);
         }
     }
 }
