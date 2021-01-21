@@ -8,6 +8,7 @@ namespace SimplePortableDatabase
         char Separator { get; }
         Diagnostics Diagnostics { get; }
         void Initialize(string dataDirectory, char separator);
+        void SetDataTableProperties(DataTableProperties dataTableProperties);
         DataTable ReadDataTable(string tableName);
         void WriteDataTable(DataTable dataTable);
         string GetBlobsDirectory(string dataDirectory);

@@ -1,5 +1,8 @@
-﻿using System.Data;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
 using System.IO;
+using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 
@@ -8,16 +11,39 @@ namespace SimplePortableDatabase
     public class Database : IDatabase
     {
         private const string DATA_FILE_FORMAT = "{0}.db";
+        private const string QUOTE = "\"";
 
         public string DataDirectory { get; private set; }
         public char Separator { get; private set; }
         public Diagnostics Diagnostics { get; private set; }
 
+        private Dictionary<string, DataTableProperties> dataTablePropertiesDictionary;
+
         public void Initialize(string dataDirectory, char separator)
         {
             this.DataDirectory = dataDirectory;
             this.Separator = separator;
+            this.dataTablePropertiesDictionary = new Dictionary<string, DataTableProperties>();
             InitializeDirectory(dataDirectory);
+        }
+
+        public void SetDataTableProperties(DataTableProperties dataTableProperties)
+        {
+            if (dataTableProperties == null)
+                throw new ArgumentNullException(nameof(dataTableProperties));
+
+            if (dataTableProperties.ColumnProperties == null || (dataTableProperties.ColumnProperties != null && dataTableProperties.ColumnProperties.Length == 0))
+                throw new ArgumentException("Column properties must not be empty.");
+
+            if (dataTableProperties.ColumnProperties.Count(c => string.IsNullOrWhiteSpace(c.ColumnName)) > 0)
+                throw new ArgumentException("All column properties should have a ColumName", nameof(ColumnProperties.ColumnName));
+
+            var group = dataTableProperties.ColumnProperties.GroupBy(c => c.ColumnName).Where(g => g.Count() > 1).FirstOrDefault();
+            
+            if (group != null)
+                throw new ArgumentException("Duplicated column properties.", group.Key);
+
+            dataTablePropertiesDictionary[dataTableProperties.TableName] = dataTableProperties;
         }
 
         public DataTable ReadDataTable(string tableName)
@@ -30,7 +56,7 @@ namespace SimplePortableDatabase
             {
                 string csv = File.ReadAllText(dataFilePath);
                 this.Diagnostics.LastReadFileRaw = csv;
-                dataTable = GetDataTableFromCsv(csv, this.Separator, tableName);
+                dataTable = GetDataTableFromCsv(csv, tableName);
             }
 
             return dataTable;
@@ -38,7 +64,19 @@ namespace SimplePortableDatabase
 
         public void WriteDataTable(DataTable dataTable)
         {
-            string csv = GetCsvFromDataTable(dataTable, this.Separator);
+            if (dataTable == null)
+                throw new ArgumentNullException(nameof(dataTable));
+
+            if (dataTable.Columns.Count == 0)
+                throw new ArgumentException("DataTable should have at least one column.", nameof(dataTable));
+
+            for (int i = 0; i < dataTable.Columns.Count; i++)
+            {
+                if (string.IsNullOrWhiteSpace(dataTable.Columns[i].ColumnName))
+                    throw new ArgumentException("All columns should have a name.", nameof(dataTable));
+            }
+
+            string csv = GetCsvFromDataTable(dataTable);
             this.Diagnostics = new Diagnostics { LastWriteFileRaw = csv };
             string dataFilePath = ResolveTableFilePath(this.DataDirectory, dataTable.TableName);
             this.Diagnostics.LastWriteFilePath = dataFilePath;
@@ -59,42 +97,86 @@ namespace SimplePortableDatabase
             WriteToBinaryFile(blob, blobFilePath);
         }
 
-        private string GetCsvFromDataTable(DataTable table, char separator)
+        private string GetCsvFromDataTable(DataTable table)
         {
             StringBuilder builder = new StringBuilder();
-            string[] headers = new string[table.Columns.Count];
+            DataTableProperties properties = null;
+
+            if (this.dataTablePropertiesDictionary.ContainsKey(table.TableName))
+                properties = this.dataTablePropertiesDictionary[table.TableName];
 
             for (int i = 0; i < table.Columns.Count; i++)
             {
-                headers[i] = table.Columns[i].ColumnName;
+                if (EscapeText(properties, table.Columns[i].ColumnName))
+                {
+                    builder.Append(QUOTE);
+                    builder.Append(table.Columns[i].ColumnName);
+                    builder.Append(QUOTE);
+                }
+                else
+                {
+                    builder.Append(table.Columns[i].ColumnName);
+                }
+
+                if (i < table.Columns.Count - 1)
+                    builder.Append(this.Separator);
             }
 
-            builder.AppendLine(string.Join(separator.ToString(), headers));
+            builder.Append(Environment.NewLine);
 
             for (int i = 0; i < table.Rows.Count; i++)
             {
                 DataRow row = table.Rows[i];
-                string line = string.Join(separator.ToString(), row.ItemArray);
-                builder.AppendLine(line);
+
+                for (int j = 0; j < table.Columns.Count; j++)
+                {
+                    if (EscapeText(properties, table.Columns[j].ColumnName))
+                    {
+                        builder.Append(QUOTE);
+                        builder.Append(row[j]);
+                        builder.Append(QUOTE);
+                    }
+                    else
+                    {
+                        builder.Append(row[j]);
+                    }
+
+                    if (j < table.Columns.Count - 1)
+                        builder.Append(this.Separator);
+                }
+
+                builder.Append(Environment.NewLine);
             }
 
             return builder.ToString();
         }
 
-        private DataTable GetDataTableFromCsv(string csv, char separator, string tableName)
+        private bool EscapeText(DataTableProperties properties, string columnName)
+        {
+            bool? result = properties?.ColumnProperties.Any(c => string.Compare(c.ColumnName, columnName, StringComparison.OrdinalIgnoreCase) == 0 && c.EscapeText);
+
+            return result.HasValue && result.Value;
+        }
+
+        private DataTable GetDataTableFromCsv(string csv, string tableName)
         {
             DataTable table = new DataTable(tableName);
+            DataTableProperties properties = null;
+
+            if (this.dataTablePropertiesDictionary.ContainsKey(table.TableName))
+                properties = this.dataTablePropertiesDictionary[table.TableName];
 
             using (StringReader reader = new StringReader(csv))
             {
                 string line = reader.ReadLine();
-                string[] headers = line.Split(separator);
-                bool hasRecord;
+                string[] headers = GetValuesFromCsvLine(line, properties);
 
                 foreach (string header in headers)
                 {
                     table.Columns.Add(header);
                 }
+
+                bool hasRecord;
 
                 do
                 {
@@ -103,7 +185,7 @@ namespace SimplePortableDatabase
 
                     if (hasRecord)
                     {
-                        string[] fields = line.Split(separator);
+                        string[] fields = GetValuesFromCsvLine(line, properties);
                         table.Rows.Add(fields);
                     }
                 }
@@ -113,6 +195,42 @@ namespace SimplePortableDatabase
             }
 
             return table;
+        }
+
+        private string[] GetValuesFromCsvLine(string line, DataTableProperties properties)
+        {
+            string[] fields = new string[properties.ColumnProperties.Length];
+            int startIndex = 0;
+            int endIndex;
+            
+            for (int i = 0; i < properties.ColumnProperties.Length; i++)
+            {
+                bool escapeText = EscapeText(properties, properties.ColumnProperties[i].ColumnName);
+
+                if (escapeText)
+                {
+                    endIndex = line.IndexOf(QUOTE + this.Separator, startIndex);
+                    startIndex++;
+                }
+                else
+                {
+                    endIndex = line.IndexOf(this.Separator, startIndex);
+                }
+
+                if (endIndex >= 0 && (endIndex < (line.Length - 1)))
+                {
+                    string field = escapeText ? line.Substring(startIndex, endIndex - startIndex) : line.Substring(startIndex, endIndex - startIndex);
+                    fields[i] = field;
+                    startIndex = endIndex + (escapeText ? 2 : 1);
+                }
+                else if (endIndex == -1)
+                {
+                    string field = escapeText ? line.Substring(startIndex, line.Length - startIndex - 1) : line.Substring(startIndex);
+                    fields[i] = field;
+                }
+            }
+
+            return fields;
         }
 
         private object ReadFromBinaryFile(string binaryFilePath)
