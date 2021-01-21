@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.9.0.0</Version>
+    <Version>0.9.1.0</Version>
     <Authors>Juan Pablo Drexler</Authors>
     <Company />
     <Product>Simple Portable Database</Product>
@@ -13,7 +13,8 @@
     <PackageTags>database csv portable</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/jpablodrexler/simple-portable-database</PackageProjectUrl>
-    <AssemblyVersion>0.9.0.0</AssemblyVersion>
+    <AssemblyVersion>0.9.1.0</AssemblyVersion>
+    <PackageReleaseNotes>Implements back compatibility with version 0.8.0.0.</PackageReleaseNotes>
   </PropertyGroup>
 
 </Project>

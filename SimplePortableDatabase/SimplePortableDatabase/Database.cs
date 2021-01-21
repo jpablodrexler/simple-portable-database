@@ -162,6 +162,7 @@ namespace SimplePortableDatabase
         {
             DataTable table = new DataTable(tableName);
             DataTableProperties properties = null;
+            bool hasRecord;
 
             if (this.dataTablePropertiesDictionary.ContainsKey(table.TableName))
                 properties = this.dataTablePropertiesDictionary[table.TableName];
@@ -169,27 +170,51 @@ namespace SimplePortableDatabase
             using (StringReader reader = new StringReader(csv))
             {
                 string line = reader.ReadLine();
-                string[] headers = GetValuesFromCsvLine(line, properties);
 
-                foreach (string header in headers)
+                if (properties != null)
                 {
-                    table.Columns.Add(header);
-                }
+                    string[] headers = GetValuesFromCsvLine(line, properties);
 
-                bool hasRecord;
-
-                do
-                {
-                    line = reader.ReadLine();
-                    hasRecord = !string.IsNullOrEmpty(line);
-
-                    if (hasRecord)
+                    foreach (string header in headers)
                     {
-                        string[] fields = GetValuesFromCsvLine(line, properties);
-                        table.Rows.Add(fields);
+                        table.Columns.Add(header);
                     }
+
+                    do
+                    {
+                        line = reader.ReadLine();
+                        hasRecord = !string.IsNullOrEmpty(line);
+
+                        if (hasRecord)
+                        {
+                            string[] fields = GetValuesFromCsvLine(line, properties);
+                            table.Rows.Add(fields);
+                        }
+                    }
+                    while (hasRecord);
                 }
-                while (hasRecord);
+                else
+                {
+                    string[] headers = line.Split(this.Separator);
+
+                    foreach (string header in headers)
+                    {
+                        table.Columns.Add(header);
+                    }
+
+                    do
+                    {
+                        line = reader.ReadLine();
+                        hasRecord = !string.IsNullOrEmpty(line);
+
+                        if (hasRecord)
+                        {
+                            string[] fields = line.Split(this.Separator);
+                            table.Rows.Add(fields);
+                        }
+                    }
+                    while (hasRecord);
+                }
 
                 table.AcceptChanges();
             }
