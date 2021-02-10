@@ -1,4 +1,6 @@
-﻿using System.Data;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
 
 namespace SimplePortableDatabase
 {
@@ -11,6 +13,8 @@ namespace SimplePortableDatabase
         void SetDataTableProperties(DataTableProperties dataTableProperties);
         DataTable ReadDataTable(string tableName);
         void WriteDataTable(DataTable dataTable);
+        List<T> ReadObjectList<T>(string tableName, Func<string[], T> mapObjectFromCsvFields);
+        void WriteObjectList<T>(List<T> list, string tableName, Func<T, int, object> mapCsvFieldIndexToCsvField);
         string GetBlobsDirectory(string dataDirectory);
         string GetTablesDirectory(string dataDirectory);
         void InitializeDirectory(string dataDirectory);

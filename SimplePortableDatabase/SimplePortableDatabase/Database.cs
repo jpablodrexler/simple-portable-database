@@ -62,6 +62,22 @@ namespace SimplePortableDatabase
             return dataTable;
         }
 
+        public List<T> ReadObjectList<T>(string tableName, Func<string[], T> mapObjectFromCsvFields)
+        {
+            List<T> list = new List<T>();
+            string dataFilePath = ResolveTableFilePath(this.DataDirectory, tableName);
+            this.Diagnostics = new Diagnostics { LastReadFilePath = dataFilePath };
+
+            if (File.Exists(dataFilePath))
+            {
+                string csv = File.ReadAllText(dataFilePath);
+                this.Diagnostics.LastReadFileRaw = csv;
+                list = GetObjectListFromCsv(csv, tableName, mapObjectFromCsvFields);
+            }
+            
+            return list;
+        }
+
         public void WriteDataTable(DataTable dataTable)
         {
             if (dataTable == null)
@@ -79,6 +95,21 @@ namespace SimplePortableDatabase
             string csv = GetCsvFromDataTable(dataTable);
             this.Diagnostics = new Diagnostics { LastWriteFileRaw = csv };
             string dataFilePath = ResolveTableFilePath(this.DataDirectory, dataTable.TableName);
+            this.Diagnostics.LastWriteFilePath = dataFilePath;
+            File.WriteAllText(dataFilePath, csv);
+        }
+
+        public void WriteObjectList<T>(List<T> list, string tableName, Func<T, int, object> mapCsvFieldIndexToCsvField)
+        {
+            if (list == null)
+                throw new ArgumentNullException(nameof(list));
+
+            if (string.IsNullOrWhiteSpace(tableName))
+                throw new ArgumentNullException(nameof(tableName));
+
+            string csv = GetCsvFromObjectList(list, tableName, mapCsvFieldIndexToCsvField);
+            this.Diagnostics = new Diagnostics { LastWriteFileRaw = csv };
+            string dataFilePath = ResolveTableFilePath(this.DataDirectory, tableName);
             this.Diagnostics.LastWriteFilePath = dataFilePath;
             File.WriteAllText(dataFilePath, csv);
         }
@@ -142,6 +173,62 @@ namespace SimplePortableDatabase
                     }
 
                     if (j < table.Columns.Count - 1)
+                        builder.Append(this.Separator);
+                }
+
+                builder.Append(Environment.NewLine);
+            }
+
+            return builder.ToString();
+        }
+
+        private string GetCsvFromObjectList<T>(List<T> list, string tableName, Func<T, int, object> mapCsvFieldIndexToCsvField)
+        {
+            StringBuilder builder = new StringBuilder();
+            DataTableProperties properties = null;
+
+            if (this.dataTablePropertiesDictionary.ContainsKey(tableName))
+                properties = this.dataTablePropertiesDictionary[tableName];
+            else
+                throw new Exception($"Properties must be defined for the columns in the table {tableName}.");
+
+            for (int i = 0; i < properties.ColumnProperties.Length; i++)
+            {
+                if (EscapeText(properties, properties.ColumnProperties[i].ColumnName))
+                {
+                    builder.Append(QUOTE);
+                    builder.Append(properties.ColumnProperties[i].ColumnName);
+                    builder.Append(QUOTE);
+                }
+                else
+                {
+                    builder.Append(properties.ColumnProperties[i].ColumnName);
+                }
+
+                if (i < properties.ColumnProperties.Length - 1)
+                    builder.Append(this.Separator);
+            }
+
+            builder.Append(Environment.NewLine);
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                T row = list[i];
+
+                for (int j = 0; j < properties.ColumnProperties.Length; j++)
+                {
+                    if (EscapeText(properties, properties.ColumnProperties[j].ColumnName))
+                    {
+                        builder.Append(QUOTE);
+                        builder.Append(mapCsvFieldIndexToCsvField(row, j));
+                        builder.Append(QUOTE);
+                    }
+                    else
+                    {
+                        builder.Append(mapCsvFieldIndexToCsvField(row, j));
+                    }
+
+                    if (j < properties.ColumnProperties.Length - 1)
                         builder.Append(this.Separator);
                 }
 
@@ -220,6 +307,58 @@ namespace SimplePortableDatabase
             }
 
             return table;
+        }
+
+        private List<T> GetObjectListFromCsv<T>(string csv, string tableName, Func<string[], T> mapObjectFromCsvFields)
+        {
+            List<T> list = new List<T>();
+            DataTableProperties properties = null;
+            bool hasRecord;
+
+            if (this.dataTablePropertiesDictionary.ContainsKey(tableName))
+                properties = this.dataTablePropertiesDictionary[tableName];
+
+            using (StringReader reader = new StringReader(csv))
+            {
+                string line = reader.ReadLine();
+
+                if (properties != null)
+                {
+                    string[] headers = GetValuesFromCsvLine(line, properties);
+
+                    do
+                    {
+                        line = reader.ReadLine();
+                        hasRecord = !string.IsNullOrEmpty(line);
+
+                        if (hasRecord)
+                        {
+                            string[] fields = GetValuesFromCsvLine(line, properties);
+                            list.Add(mapObjectFromCsvFields(fields));
+                        }
+                    }
+                    while (hasRecord);
+                }
+                else
+                {
+                    string[] headers = line.Split(this.Separator);
+
+                    do
+                    {
+                        line = reader.ReadLine();
+                        hasRecord = !string.IsNullOrEmpty(line);
+
+                        if (hasRecord)
+                        {
+                            string[] fields = line.Split(this.Separator);
+                            list.Add(mapObjectFromCsvFields(fields));
+                        }
+                    }
+                    while (hasRecord);
+                }
+            }
+
+            return list;
         }
 
         private string[] GetValuesFromCsvLine(string line, DataTableProperties properties)
