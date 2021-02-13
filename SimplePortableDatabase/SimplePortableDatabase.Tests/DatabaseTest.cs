@@ -287,7 +287,6 @@ namespace SimplePortableDatabase.Tests
 
             Database portableDatabase = new Database();
             portableDatabase.Initialize("TestData", ';');
-
             portableDatabase.SetDataTableProperties(new DataTableProperties
             {
                 TableName = tableName,
@@ -320,6 +319,182 @@ namespace SimplePortableDatabase.Tests
                     7 => r.ThumbnailPixelHeight,
                     8 => r.ThumbnailCreationDateTime,
                     9 => r.Hash,
+                    _ => throw new ArgumentOutOfRangeException(nameof(i))
+                };
+            });
+
+            portableDatabase.Diagnostics.LastWriteFilePath.Should().Be(filePath);
+            portableDatabase.Diagnostics.LastWriteFileRaw.Should().Be(expected);
+
+            string content = File.ReadAllText(filePath);
+            content.Should().Be(expected);
+        }
+
+        [Fact]
+        public void WriteObjectList_AllColumnsWithEscapedText()
+        {
+            string expected = "\"FolderId\";\"FileName\";\"FileSize\";\"ImageRotation\";\"PixelWidth\";\"PixelHeight\";\"ThumbnailPixelWidth\";\"ThumbnailPixelHeight\";\"ThumbnailCreationDateTime\";\"Description\";\"Hash\"\r\n" +
+                "\"876283c6-780e-4ad5-975c-be63044c087a\";\"20200720175810_3.jpg\";\"363888\";\"Rotate0\";\"1920\";\"1080\";\"200\";\"112\";\"25/07/2020 9:45:47\";\"First file description\";\"4e50d5c7f1a64b5d61422382ac822641ad4e5b943aca9ade955f4655f799558bb0ae9c342ee3ead0949b32019b25606bd16988381108f56bb6c6dd673edaa1e4\"\r\n" +
+                "\"876283c6-780e-4ad5-975c-be63044c087a\";\"20200720175816_3.jpg\";\"343633\";\"Rotate0\";\"1920\";\"1080\";\"200\";\"112\";\"25/07/2020 9:45:47\";\"Second file description; Includes separator character escaped.\";\"0af8f118b7d606e5d174643727bd3c0c6028b52c50481585274fd572110b108c7a0d7901227f75a72b44c89335e002a65e8137ff5b238ab1c0bba0505e783124\"\r\n";
+            string tableName = "assets" + Guid.NewGuid();
+            string filePath = Path.Combine("TestData", "Tables", tableName + ".db");
+
+            List<TestRecord> list = new List<TestRecord>
+            {
+                new TestRecord
+                {
+                    FolderId = "876283c6-780e-4ad5-975c-be63044c087a",
+                    FileName = "20200720175810_3.jpg",
+                    FileSize = "363888",
+                    ImageRotation = "Rotate0",
+                    PixelWidth = "1920",
+                    PixelHeight = "1080",
+                    ThumbnailPixelWidth = "200",
+                    ThumbnailPixelHeight = "112",
+                    ThumbnailCreationDateTime = "25/07/2020 9:45:47",
+                    Description = "First file description",
+                    Hash = "4e50d5c7f1a64b5d61422382ac822641ad4e5b943aca9ade955f4655f799558bb0ae9c342ee3ead0949b32019b25606bd16988381108f56bb6c6dd673edaa1e4"
+                },
+                new TestRecord
+                {
+                    FolderId = "876283c6-780e-4ad5-975c-be63044c087a",
+                    FileName = "20200720175816_3.jpg",
+                    FileSize = "343633",
+                    ImageRotation = "Rotate0",
+                    PixelWidth = "1920",
+                    PixelHeight = "1080",
+                    ThumbnailPixelWidth = "200",
+                    ThumbnailPixelHeight = "112",
+                    ThumbnailCreationDateTime = "25/07/2020 9:45:47",
+                    Description = "Second file description; Includes separator character escaped.",
+                    Hash = "0af8f118b7d606e5d174643727bd3c0c6028b52c50481585274fd572110b108c7a0d7901227f75a72b44c89335e002a65e8137ff5b238ab1c0bba0505e783124"
+                }
+            };
+
+            Database portableDatabase = new Database();
+            portableDatabase.Initialize("TestData", ';');
+            portableDatabase.SetDataTableProperties(new DataTableProperties
+            {
+                TableName = tableName,
+                ColumnProperties = new ColumnProperties[]
+                {
+                    new ColumnProperties { ColumnName = "FolderId", EscapeText = true },
+                    new ColumnProperties { ColumnName = "FileName", EscapeText = true },
+                    new ColumnProperties { ColumnName = "FileSize", EscapeText = true },
+                    new ColumnProperties { ColumnName = "ImageRotation", EscapeText = true },
+                    new ColumnProperties { ColumnName = "PixelWidth", EscapeText = true },
+                    new ColumnProperties { ColumnName = "PixelHeight", EscapeText = true },
+                    new ColumnProperties { ColumnName = "ThumbnailPixelWidth", EscapeText = true },
+                    new ColumnProperties { ColumnName = "ThumbnailPixelHeight", EscapeText = true },
+                    new ColumnProperties { ColumnName = "ThumbnailCreationDateTime", EscapeText = true },
+                    new ColumnProperties { ColumnName = "Description", EscapeText = true },
+                    new ColumnProperties { ColumnName = "Hash", EscapeText = true }
+                }
+            });
+
+            portableDatabase.WriteObjectList(list, tableName, (r, i) =>
+            {
+                return i switch
+                {
+                    0 => r.FolderId,
+                    1 => r.FileName,
+                    2 => r.FileSize,
+                    3 => r.ImageRotation,
+                    4 => r.PixelWidth,
+                    5 => r.PixelHeight,
+                    6 => r.ThumbnailPixelWidth,
+                    7 => r.ThumbnailPixelHeight,
+                    8 => r.ThumbnailCreationDateTime,
+                    9 => r.Description,
+                    10 => r.Hash,
+                    _ => throw new ArgumentOutOfRangeException(nameof(i))
+                };
+            });
+
+            portableDatabase.Diagnostics.LastWriteFilePath.Should().Be(filePath);
+            portableDatabase.Diagnostics.LastWriteFileRaw.Should().Be(expected);
+
+            string content = File.ReadAllText(filePath);
+            content.Should().Be(expected);
+        }
+
+        [Fact]
+        public void WriteObjectList_SomeColumnsWithEscapedText()
+        {
+            string expected = "\"FolderId\";FileName;FileSize;ImageRotation;PixelWidth;PixelHeight;ThumbnailPixelWidth;ThumbnailPixelHeight;ThumbnailCreationDateTime;\"Description\";Hash\r\n" +
+                "\"876283c6-780e-4ad5-975c-be63044c087a\";20200720175810_3.jpg;363888;Rotate0;1920;1080;200;112;25/07/2020 9:45:47;\"First file description\";4e50d5c7f1a64b5d61422382ac822641ad4e5b943aca9ade955f4655f799558bb0ae9c342ee3ead0949b32019b25606bd16988381108f56bb6c6dd673edaa1e4\r\n" +
+                "\"876283c6-780e-4ad5-975c-be63044c087a\";20200720175816_3.jpg;343633;Rotate0;1920;1080;200;112;25/07/2020 9:45:47;\"Second file description; Includes separator character escaped.\";0af8f118b7d606e5d174643727bd3c0c6028b52c50481585274fd572110b108c7a0d7901227f75a72b44c89335e002a65e8137ff5b238ab1c0bba0505e783124\r\n";
+            string tableName = "assets" + Guid.NewGuid();
+            string filePath = Path.Combine("TestData", "Tables", tableName + ".db");
+
+            List<TestRecord> list = new List<TestRecord>
+            {
+                new TestRecord
+                {
+                    FolderId = "876283c6-780e-4ad5-975c-be63044c087a",
+                    FileName = "20200720175810_3.jpg",
+                    FileSize = "363888",
+                    ImageRotation = "Rotate0",
+                    PixelWidth = "1920",
+                    PixelHeight = "1080",
+                    ThumbnailPixelWidth = "200",
+                    ThumbnailPixelHeight = "112",
+                    ThumbnailCreationDateTime = "25/07/2020 9:45:47",
+                    Description = "First file description",
+                    Hash = "4e50d5c7f1a64b5d61422382ac822641ad4e5b943aca9ade955f4655f799558bb0ae9c342ee3ead0949b32019b25606bd16988381108f56bb6c6dd673edaa1e4"
+                },
+                new TestRecord
+                {
+                    FolderId = "876283c6-780e-4ad5-975c-be63044c087a",
+                    FileName = "20200720175816_3.jpg",
+                    FileSize = "343633",
+                    ImageRotation = "Rotate0",
+                    PixelWidth = "1920",
+                    PixelHeight = "1080",
+                    ThumbnailPixelWidth = "200",
+                    ThumbnailPixelHeight = "112",
+                    ThumbnailCreationDateTime = "25/07/2020 9:45:47",
+                    Description = "Second file description; Includes separator character escaped.",
+                    Hash = "0af8f118b7d606e5d174643727bd3c0c6028b52c50481585274fd572110b108c7a0d7901227f75a72b44c89335e002a65e8137ff5b238ab1c0bba0505e783124"
+                }
+            };
+
+            Database portableDatabase = new Database();
+            portableDatabase.Initialize("TestData", ';');
+            portableDatabase.SetDataTableProperties(new DataTableProperties
+            {
+                TableName = tableName,
+                ColumnProperties = new ColumnProperties[]
+                {
+                    new ColumnProperties { ColumnName = "FolderId", EscapeText = true },
+                    new ColumnProperties { ColumnName = "FileName", EscapeText = false },
+                    new ColumnProperties { ColumnName = "FileSize", EscapeText = false },
+                    new ColumnProperties { ColumnName = "ImageRotation", EscapeText = false },
+                    new ColumnProperties { ColumnName = "PixelWidth", EscapeText = false },
+                    new ColumnProperties { ColumnName = "PixelHeight", EscapeText = false },
+                    new ColumnProperties { ColumnName = "ThumbnailPixelWidth", EscapeText = false },
+                    new ColumnProperties { ColumnName = "ThumbnailPixelHeight", EscapeText = false },
+                    new ColumnProperties { ColumnName = "ThumbnailCreationDateTime", EscapeText = false },
+                    new ColumnProperties { ColumnName = "Description", EscapeText = true },
+                    new ColumnProperties { ColumnName = "Hash", EscapeText = false }
+                }
+            });
+
+            portableDatabase.WriteObjectList(list, tableName, (r, i) =>
+            {
+                return i switch
+                {
+                    0 => r.FolderId,
+                    1 => r.FileName,
+                    2 => r.FileSize,
+                    3 => r.ImageRotation,
+                    4 => r.PixelWidth,
+                    5 => r.PixelHeight,
+                    6 => r.ThumbnailPixelWidth,
+                    7 => r.ThumbnailPixelHeight,
+                    8 => r.ThumbnailCreationDateTime,
+                    9 => r.Description,
+                    10 => r.Hash,
                     _ => throw new ArgumentOutOfRangeException(nameof(i))
                 };
             });
@@ -832,15 +1007,16 @@ namespace SimplePortableDatabase.Tests
 
     public class TestRecord
     {
-        public string FolderId { get; internal set; }
-        public string FileName { get; internal set; }
-        public string FileSize { get; internal set; }
-        public string ImageRotation { get; internal set; }
-        public string PixelWidth { get; internal set; }
-        public string PixelHeight { get; internal set; }
-        public string ThumbnailPixelWidth { get; internal set; }
-        public string ThumbnailPixelHeight { get; internal set; }
-        public string ThumbnailCreationDateTime { get; internal set; }
-        public string Hash { get; internal set; }
+        public string FolderId { get; set; }
+        public string FileName { get; set; }
+        public string FileSize { get; set; }
+        public string ImageRotation { get; set; }
+        public string PixelWidth { get; set; }
+        public string PixelHeight { get; set; }
+        public string ThumbnailPixelWidth { get; set; }
+        public string ThumbnailPixelHeight { get; set; }
+        public string ThumbnailCreationDateTime { get; set; }
+        public string Description { get; set; }
+        public string Hash { get; set; }
     }
 }
