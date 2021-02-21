@@ -12,7 +12,28 @@ namespace SimplePortableDatabase
 
         }
 
-        internal List<T> GetObjectListFromCsv<T>(string csv, Func<string[], T> mapObjectFromCsvFields)
+        internal List<T> ReadObjectList<T>(string dataFilePath, string tableName, Func<string[], T> mapObjectFromCsvFields, Diagnostics diagnostics)
+        {
+            List<T> list = new List<T>();
+            
+            if (File.Exists(dataFilePath))
+            {
+                string csv = File.ReadAllText(dataFilePath);
+                diagnostics.LastReadFileRaw = csv;
+                list = this.GetObjectListFromCsv(csv, mapObjectFromCsvFields);
+            }
+
+            return list;
+        }
+
+        internal void WriteObjectList<T>(string dataFilePath, List<T> list, string tableName, Func<T, int, object> mapCsvFieldIndexToCsvField, Diagnostics diagnostics)
+        {
+            string csv = this.GetCsvFromObjectList(list, tableName, mapCsvFieldIndexToCsvField);
+            diagnostics.LastWriteFileRaw = csv;
+            File.WriteAllText(dataFilePath, csv);
+        }
+
+        private List<T> GetObjectListFromCsv<T>(string csv, Func<string[], T> mapObjectFromCsvFields)
         {
             List<T> list = new List<T>();
             bool hasRecord;
@@ -60,7 +81,7 @@ namespace SimplePortableDatabase
             return list;
         }
 
-        internal string GetCsvFromObjectList<T>(List<T> list, string tableName, Func<T, int, object> mapCsvFieldIndexToCsvField)
+        private string GetCsvFromObjectList<T>(List<T> list, string tableName, Func<T, int, object> mapCsvFieldIndexToCsvField)
         {
             StringBuilder builder = new StringBuilder();
             
