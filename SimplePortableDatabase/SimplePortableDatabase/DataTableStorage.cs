@@ -7,7 +7,12 @@ namespace SimplePortableDatabase
 {
     internal class DataTableStorage : BaseStorage
     {
-        internal DataTable GetDataTableFromCsv(string csv, string tableName, DataTableProperties properties, char separator)
+        internal DataTableStorage(DataTableProperties properties, char separator) : base(properties, separator)
+        {
+
+        }
+
+        internal DataTable GetDataTableFromCsv(string csv, string tableName)
         {
             DataTable table = new DataTable(tableName);
             bool hasRecord;
@@ -16,9 +21,9 @@ namespace SimplePortableDatabase
             {
                 string line = reader.ReadLine();
 
-                if (properties != null)
+                if (this.Properties != null)
                 {
-                    string[] headers = GetValuesFromCsvLine(line, properties, separator);
+                    string[] headers = GetValuesFromCsvLine(line);
 
                     foreach (string header in headers)
                     {
@@ -32,7 +37,7 @@ namespace SimplePortableDatabase
 
                         if (hasRecord)
                         {
-                            string[] fields = GetValuesFromCsvLine(line, properties, separator);
+                            string[] fields = GetValuesFromCsvLine(line);
                             table.Rows.Add(fields);
                         }
                     }
@@ -40,7 +45,7 @@ namespace SimplePortableDatabase
                 }
                 else
                 {
-                    string[] headers = line.Split(separator);
+                    string[] headers = line.Split(this.Separator);
 
                     foreach (string header in headers)
                     {
@@ -54,7 +59,7 @@ namespace SimplePortableDatabase
 
                         if (hasRecord)
                         {
-                            string[] fields = line.Split(separator);
+                            string[] fields = line.Split(this.Separator);
                             table.Rows.Add(fields);
                         }
                     }
@@ -67,13 +72,13 @@ namespace SimplePortableDatabase
             return table;
         }
 
-        internal string GetCsvFromDataTable(DataTable table, DataTableProperties properties, char separator)
+        internal string GetCsvFromDataTable(DataTable table)
         {
             StringBuilder builder = new StringBuilder();
 
             for (int i = 0; i < table.Columns.Count; i++)
             {
-                if (EscapeText(properties, table.Columns[i].ColumnName))
+                if (EscapeText(table.Columns[i].ColumnName))
                 {
                     builder.Append(QUOTE);
                     builder.Append(table.Columns[i].ColumnName);
@@ -85,7 +90,7 @@ namespace SimplePortableDatabase
                 }
 
                 if (i < table.Columns.Count - 1)
-                    builder.Append(separator);
+                    builder.Append(this.Separator);
             }
 
             builder.Append(Environment.NewLine);
@@ -96,7 +101,7 @@ namespace SimplePortableDatabase
 
                 for (int j = 0; j < table.Columns.Count; j++)
                 {
-                    if (EscapeText(properties, table.Columns[j].ColumnName))
+                    if (EscapeText(table.Columns[j].ColumnName))
                     {
                         builder.Append(QUOTE);
                         builder.Append(row[j]);
@@ -108,7 +113,7 @@ namespace SimplePortableDatabase
                     }
 
                     if (j < table.Columns.Count - 1)
-                        builder.Append(separator);
+                        builder.Append(this.Separator);
                 }
 
                 builder.Append(Environment.NewLine);

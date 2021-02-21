@@ -55,7 +55,7 @@ namespace SimplePortableDatabase
                 string csv = File.ReadAllText(dataFilePath);
                 this.Diagnostics.LastReadFileRaw = csv;
                 DataTableProperties properties = GetDataTableProperties(tableName);
-                dataTable = new DataTableStorage().GetDataTableFromCsv(csv, tableName, properties, this.Separator);
+                dataTable = new DataTableStorage(properties, this.Separator).GetDataTableFromCsv(csv, tableName);
             }
 
             return dataTable;
@@ -78,7 +78,7 @@ namespace SimplePortableDatabase
                 string csv = File.ReadAllText(dataFilePath);
                 this.Diagnostics.LastReadFileRaw = csv;
                 DataTableProperties properties = GetDataTableProperties(tableName);
-                list = new ObjectListStorage().GetObjectListFromCsv(csv, properties, this.Separator, mapObjectFromCsvFields);
+                list = new ObjectListStorage(properties, this.Separator).GetObjectListFromCsv(csv, mapObjectFromCsvFields);
             }
             
             return list;
@@ -99,7 +99,7 @@ namespace SimplePortableDatabase
             }
 
             DataTableProperties properties = GetDataTableProperties(dataTable.TableName);
-            string csv = new DataTableStorage().GetCsvFromDataTable(dataTable, properties, this.Separator);
+            string csv = new DataTableStorage(properties, this.Separator).GetCsvFromDataTable(dataTable);
             this.Diagnostics = new Diagnostics { LastWriteFileRaw = csv };
             string dataFilePath = ResolveTableFilePath(this.DataDirectory, dataTable.TableName);
             this.Diagnostics.LastWriteFilePath = dataFilePath;
@@ -115,7 +115,7 @@ namespace SimplePortableDatabase
                 throw new ArgumentNullException(nameof(tableName));
 
             DataTableProperties properties = GetDataTableProperties(tableName);
-            string csv = new ObjectListStorage().GetCsvFromObjectList(list, tableName, properties, this.Separator, mapCsvFieldIndexToCsvField);
+            string csv = new ObjectListStorage(properties, this.Separator).GetCsvFromObjectList(list, tableName, mapCsvFieldIndexToCsvField);
             this.Diagnostics = new Diagnostics { LastWriteFileRaw = csv };
             string dataFilePath = ResolveTableFilePath(this.DataDirectory, tableName);
             this.Diagnostics.LastWriteFilePath = dataFilePath;

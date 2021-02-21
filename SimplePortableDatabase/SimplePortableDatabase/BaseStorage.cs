@@ -6,25 +6,33 @@ namespace SimplePortableDatabase
     internal abstract class BaseStorage
     {
         protected const string QUOTE = "\"";
+        protected DataTableProperties Properties { get; set; }
+        protected char Separator { get; set; }
 
-        protected string[] GetValuesFromCsvLine(string line, DataTableProperties properties, char separator)
+        internal BaseStorage(DataTableProperties properties, char separator)
         {
-            string[] fields = new string[properties.ColumnProperties.Length];
+            this.Properties = properties;
+            this.Separator = separator;
+        }
+
+        protected string[] GetValuesFromCsvLine(string line)
+        {
+            string[] fields = new string[this.Properties.ColumnProperties.Length];
             int startIndex = 0;
             int endIndex;
 
-            for (int i = 0; i < properties.ColumnProperties.Length; i++)
+            for (int i = 0; i < this.Properties.ColumnProperties.Length; i++)
             {
-                bool escapeText = EscapeText(properties, properties.ColumnProperties[i].ColumnName);
+                bool escapeText = EscapeText(this.Properties.ColumnProperties[i].ColumnName);
 
                 if (escapeText)
                 {
-                    endIndex = line.IndexOf(QUOTE + separator, startIndex);
+                    endIndex = line.IndexOf(QUOTE + this.Separator, startIndex);
                     startIndex++;
                 }
                 else
                 {
-                    endIndex = line.IndexOf(separator, startIndex);
+                    endIndex = line.IndexOf(this.Separator, startIndex);
                 }
 
                 if (endIndex >= 0 && (endIndex < (line.Length - 1)))
@@ -43,9 +51,9 @@ namespace SimplePortableDatabase
             return fields;
         }
 
-        protected bool EscapeText(DataTableProperties properties, string columnName)
+        protected bool EscapeText(string columnName)
         {
-            bool? result = properties?.ColumnProperties.Any(c => string.Compare(c.ColumnName, columnName, StringComparison.OrdinalIgnoreCase) == 0 && c.EscapeText);
+            bool? result = this.Properties?.ColumnProperties.Any(c => string.Compare(c.ColumnName, columnName, StringComparison.OrdinalIgnoreCase) == 0 && c.EscapeText);
 
             return result.HasValue && result.Value;
         }
