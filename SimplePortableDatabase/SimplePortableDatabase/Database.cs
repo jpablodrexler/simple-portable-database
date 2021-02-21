@@ -60,19 +60,10 @@ namespace SimplePortableDatabase
 
         public List<T> ReadObjectList<T>(string tableName, Func<string[], T> mapObjectFromCsvFields)
         {
-            List<T> list = new List<T>();
             string dataFilePath = ResolveTableFilePath(this.DataDirectory, tableName);
             this.Diagnostics = new Diagnostics { LastReadFilePath = dataFilePath };
-
-            if (File.Exists(dataFilePath))
-            {
-                string csv = File.ReadAllText(dataFilePath);
-                this.Diagnostics.LastReadFileRaw = csv;
-                DataTableProperties properties = GetDataTableProperties(tableName);
-                list = new ObjectListStorage(properties, this.Separator).GetObjectListFromCsv(csv, mapObjectFromCsvFields);
-            }
-            
-            return list;
+            DataTableProperties properties = GetDataTableProperties(tableName);
+            return new ObjectListStorage(properties, this.Separator).ReadObjectList(dataFilePath, tableName, mapObjectFromCsvFields, this.Diagnostics);
         }
 
         public void WriteDataTable(DataTable dataTable)
@@ -103,12 +94,10 @@ namespace SimplePortableDatabase
             if (string.IsNullOrWhiteSpace(tableName))
                 throw new ArgumentNullException(nameof(tableName));
 
-            DataTableProperties properties = GetDataTableProperties(tableName);
-            string csv = new ObjectListStorage(properties, this.Separator).GetCsvFromObjectList(list, tableName, mapCsvFieldIndexToCsvField);
-            this.Diagnostics = new Diagnostics { LastWriteFileRaw = csv };
             string dataFilePath = ResolveTableFilePath(this.DataDirectory, tableName);
-            this.Diagnostics.LastWriteFilePath = dataFilePath;
-            File.WriteAllText(dataFilePath, csv);
+            this.Diagnostics = new Diagnostics { LastWriteFilePath = dataFilePath };
+            DataTableProperties properties = GetDataTableProperties(tableName);
+            new ObjectListStorage(properties, this.Separator).WriteObjectList(dataFilePath, list, tableName, mapCsvFieldIndexToCsvField, this.Diagnostics);
         }
 
         public object ReadBlob(string blobName)
