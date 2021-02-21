@@ -5,14 +5,14 @@ using System.Text;
 
 namespace SimplePortableDatabase
 {
-    internal class ObjectListStorage : BaseStorage
+    internal class ObjectListStorage : BaseCsvStorage
     {
         internal ObjectListStorage(DataTableProperties properties, char separator) : base(properties, separator)
         {
 
         }
 
-        internal List<T> ReadObjectList<T>(string dataFilePath, string tableName, Func<string[], T> mapObjectFromCsvFields, Diagnostics diagnostics)
+        internal List<T> ReadObjectList<T>(string dataFilePath, Func<string[], T> mapObjectFromCsvFields, Diagnostics diagnostics)
         {
             List<T> list = new List<T>();
             

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace SimplePortableDatabase
 {
-    internal class DataTableStorage : BaseStorage
+    internal class DataTableStorage : BaseCsvStorage
     {
         internal DataTableStorage(DataTableProperties properties, char separator) : base(properties, separator)
         {
