@@ -12,7 +12,28 @@ namespace SimplePortableDatabase
 
         }
 
-        internal DataTable GetDataTableFromCsv(string csv, string tableName)
+        internal DataTable ReadDataTable(string dataFilePath, string tableName, Diagnostics diagnostics)
+        {
+            DataTable dataTable = null;
+            
+            if (File.Exists(dataFilePath))
+            {
+                string csv = File.ReadAllText(dataFilePath);
+                diagnostics.LastReadFileRaw = csv;
+                dataTable = this.GetDataTableFromCsv(csv, tableName);
+            }
+
+            return dataTable;
+        }
+
+        internal void WriteDataTable(string dataFilePath, DataTable dataTable, Diagnostics diagnostics)
+        {
+            string csv = this.GetCsvFromDataTable(dataTable);
+            diagnostics.LastWriteFileRaw = csv;
+            File.WriteAllText(dataFilePath, csv);
+        }
+
+        private DataTable GetDataTableFromCsv(string csv, string tableName)
         {
             DataTable table = new DataTable(tableName);
             bool hasRecord;
@@ -72,7 +93,7 @@ namespace SimplePortableDatabase
             return table;
         }
 
-        internal string GetCsvFromDataTable(DataTable table)
+        private string GetCsvFromDataTable(DataTable table)
         {
             StringBuilder builder = new StringBuilder();
 
