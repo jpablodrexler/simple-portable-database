@@ -46,19 +46,10 @@ namespace SimplePortableDatabase
 
         public DataTable ReadDataTable(string tableName)
         {
-            DataTable dataTable = null;
             string dataFilePath = ResolveTableFilePath(this.DataDirectory, tableName);
             this.Diagnostics = new Diagnostics { LastReadFilePath = dataFilePath };
-            
-            if (File.Exists(dataFilePath))
-            {
-                string csv = File.ReadAllText(dataFilePath);
-                this.Diagnostics.LastReadFileRaw = csv;
-                DataTableProperties properties = GetDataTableProperties(tableName);
-                dataTable = new DataTableStorage(properties, this.Separator).GetDataTableFromCsv(csv, tableName);
-            }
-
-            return dataTable;
+            DataTableProperties properties = GetDataTableProperties(tableName);
+            return new DataTableStorage(properties, this.Separator).ReadDataTable(dataFilePath, tableName, this.Diagnostics);
         }
 
         private DataTableProperties GetDataTableProperties(string tableName)
@@ -98,12 +89,10 @@ namespace SimplePortableDatabase
                     throw new ArgumentException("All columns should have a name.", nameof(dataTable));
             }
 
-            DataTableProperties properties = GetDataTableProperties(dataTable.TableName);
-            string csv = new DataTableStorage(properties, this.Separator).GetCsvFromDataTable(dataTable);
-            this.Diagnostics = new Diagnostics { LastWriteFileRaw = csv };
             string dataFilePath = ResolveTableFilePath(this.DataDirectory, dataTable.TableName);
-            this.Diagnostics.LastWriteFilePath = dataFilePath;
-            File.WriteAllText(dataFilePath, csv);
+            this.Diagnostics = new Diagnostics { LastWriteFilePath = dataFilePath };
+            DataTableProperties properties = GetDataTableProperties(dataTable.TableName);
+            new DataTableStorage(properties, this.Separator).WriteDataTable(dataFilePath, dataTable, this.Diagnostics);
         }
 
         public void WriteObjectList<T>(List<T> list, string tableName, Func<T, int, object> mapCsvFieldIndexToCsvField)
