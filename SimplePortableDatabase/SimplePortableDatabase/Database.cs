@@ -4,14 +4,12 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
 
 namespace SimplePortableDatabase
 {
     public class Database : IDatabase
     {
         private const string DATA_FILE_FORMAT = "{0}.db";
-        private const string QUOTE = "\"";
 
         public string DataDirectory { get; private set; }
         public char Separator { get; private set; }
@@ -56,10 +54,17 @@ namespace SimplePortableDatabase
             {
                 string csv = File.ReadAllText(dataFilePath);
                 this.Diagnostics.LastReadFileRaw = csv;
-                dataTable = GetDataTableFromCsv(csv, tableName);
+                DataTableProperties properties = GetDataTableProperties(tableName);
+                dataTable = new DataTableStorage().GetDataTableFromCsv(csv, tableName, properties, this.Separator);
             }
 
             return dataTable;
+        }
+
+        private DataTableProperties GetDataTableProperties(string tableName)
+        {
+            return this.dataTablePropertiesDictionary.ContainsKey(tableName) ?
+                                this.dataTablePropertiesDictionary[tableName] : null;
         }
 
         public List<T> ReadObjectList<T>(string tableName, Func<string[], T> mapObjectFromCsvFields)
@@ -72,7 +77,8 @@ namespace SimplePortableDatabase
             {
                 string csv = File.ReadAllText(dataFilePath);
                 this.Diagnostics.LastReadFileRaw = csv;
-                list = GetObjectListFromCsv(csv, tableName, mapObjectFromCsvFields);
+                DataTableProperties properties = GetDataTableProperties(tableName);
+                list = new ObjectListStorage().GetObjectListFromCsv(csv, properties, this.Separator, mapObjectFromCsvFields);
             }
             
             return list;
@@ -92,7 +98,8 @@ namespace SimplePortableDatabase
                     throw new ArgumentException("All columns should have a name.", nameof(dataTable));
             }
 
-            string csv = GetCsvFromDataTable(dataTable);
+            DataTableProperties properties = GetDataTableProperties(dataTable.TableName);
+            string csv = new DataTableStorage().GetCsvFromDataTable(dataTable, properties, this.Separator);
             this.Diagnostics = new Diagnostics { LastWriteFileRaw = csv };
             string dataFilePath = ResolveTableFilePath(this.DataDirectory, dataTable.TableName);
             this.Diagnostics.LastWriteFilePath = dataFilePath;
@@ -107,7 +114,8 @@ namespace SimplePortableDatabase
             if (string.IsNullOrWhiteSpace(tableName))
                 throw new ArgumentNullException(nameof(tableName));
 
-            string csv = GetCsvFromObjectList(list, tableName, mapCsvFieldIndexToCsvField);
+            DataTableProperties properties = GetDataTableProperties(tableName);
+            string csv = new ObjectListStorage().GetCsvFromObjectList(list, tableName, properties, this.Separator, mapCsvFieldIndexToCsvField);
             this.Diagnostics = new Diagnostics { LastWriteFileRaw = csv };
             string dataFilePath = ResolveTableFilePath(this.DataDirectory, tableName);
             this.Diagnostics.LastWriteFilePath = dataFilePath;
@@ -126,275 +134,6 @@ namespace SimplePortableDatabase
             string blobFilePath = ResolveBlobFilePath(this.DataDirectory, blobName);
             this.Diagnostics = new Diagnostics { LastWriteFilePath = blobFilePath, LastWriteFileRaw = blob };
             WriteToBinaryFile(blob, blobFilePath);
-        }
-
-        private string GetCsvFromDataTable(DataTable table)
-        {
-            StringBuilder builder = new StringBuilder();
-            DataTableProperties properties = null;
-
-            if (this.dataTablePropertiesDictionary.ContainsKey(table.TableName))
-                properties = this.dataTablePropertiesDictionary[table.TableName];
-
-            for (int i = 0; i < table.Columns.Count; i++)
-            {
-                if (EscapeText(properties, table.Columns[i].ColumnName))
-                {
-                    builder.Append(QUOTE);
-                    builder.Append(table.Columns[i].ColumnName);
-                    builder.Append(QUOTE);
-                }
-                else
-                {
-                    builder.Append(table.Columns[i].ColumnName);
-                }
-
-                if (i < table.Columns.Count - 1)
-                    builder.Append(this.Separator);
-            }
-
-            builder.Append(Environment.NewLine);
-
-            for (int i = 0; i < table.Rows.Count; i++)
-            {
-                DataRow row = table.Rows[i];
-
-                for (int j = 0; j < table.Columns.Count; j++)
-                {
-                    if (EscapeText(properties, table.Columns[j].ColumnName))
-                    {
-                        builder.Append(QUOTE);
-                        builder.Append(row[j]);
-                        builder.Append(QUOTE);
-                    }
-                    else
-                    {
-                        builder.Append(row[j]);
-                    }
-
-                    if (j < table.Columns.Count - 1)
-                        builder.Append(this.Separator);
-                }
-
-                builder.Append(Environment.NewLine);
-            }
-
-            return builder.ToString();
-        }
-
-        private string GetCsvFromObjectList<T>(List<T> list, string tableName, Func<T, int, object> mapCsvFieldIndexToCsvField)
-        {
-            StringBuilder builder = new StringBuilder();
-            DataTableProperties properties = null;
-
-            if (this.dataTablePropertiesDictionary.ContainsKey(tableName))
-                properties = this.dataTablePropertiesDictionary[tableName];
-            else
-                throw new Exception($"Properties must be defined for the columns in the table {tableName}.");
-
-            for (int i = 0; i < properties.ColumnProperties.Length; i++)
-            {
-                if (EscapeText(properties, properties.ColumnProperties[i].ColumnName))
-                {
-                    builder.Append(QUOTE);
-                    builder.Append(properties.ColumnProperties[i].ColumnName);
-                    builder.Append(QUOTE);
-                }
-                else
-                {
-                    builder.Append(properties.ColumnProperties[i].ColumnName);
-                }
-
-                if (i < properties.ColumnProperties.Length - 1)
-                    builder.Append(this.Separator);
-            }
-
-            builder.Append(Environment.NewLine);
-
-            for (int i = 0; i < list.Count; i++)
-            {
-                T row = list[i];
-
-                for (int j = 0; j < properties.ColumnProperties.Length; j++)
-                {
-                    if (EscapeText(properties, properties.ColumnProperties[j].ColumnName))
-                    {
-                        builder.Append(QUOTE);
-                        builder.Append(mapCsvFieldIndexToCsvField(row, j));
-                        builder.Append(QUOTE);
-                    }
-                    else
-                    {
-                        builder.Append(mapCsvFieldIndexToCsvField(row, j));
-                    }
-
-                    if (j < properties.ColumnProperties.Length - 1)
-                        builder.Append(this.Separator);
-                }
-
-                builder.Append(Environment.NewLine);
-            }
-
-            return builder.ToString();
-        }
-
-        private bool EscapeText(DataTableProperties properties, string columnName)
-        {
-            bool? result = properties?.ColumnProperties.Any(c => string.Compare(c.ColumnName, columnName, StringComparison.OrdinalIgnoreCase) == 0 && c.EscapeText);
-
-            return result.HasValue && result.Value;
-        }
-
-        private DataTable GetDataTableFromCsv(string csv, string tableName)
-        {
-            DataTable table = new DataTable(tableName);
-            DataTableProperties properties = null;
-            bool hasRecord;
-
-            if (this.dataTablePropertiesDictionary.ContainsKey(table.TableName))
-                properties = this.dataTablePropertiesDictionary[table.TableName];
-
-            using (StringReader reader = new StringReader(csv))
-            {
-                string line = reader.ReadLine();
-
-                if (properties != null)
-                {
-                    string[] headers = GetValuesFromCsvLine(line, properties);
-
-                    foreach (string header in headers)
-                    {
-                        table.Columns.Add(header);
-                    }
-
-                    do
-                    {
-                        line = reader.ReadLine();
-                        hasRecord = !string.IsNullOrEmpty(line);
-
-                        if (hasRecord)
-                        {
-                            string[] fields = GetValuesFromCsvLine(line, properties);
-                            table.Rows.Add(fields);
-                        }
-                    }
-                    while (hasRecord);
-                }
-                else
-                {
-                    string[] headers = line.Split(this.Separator);
-
-                    foreach (string header in headers)
-                    {
-                        table.Columns.Add(header);
-                    }
-
-                    do
-                    {
-                        line = reader.ReadLine();
-                        hasRecord = !string.IsNullOrEmpty(line);
-
-                        if (hasRecord)
-                        {
-                            string[] fields = line.Split(this.Separator);
-                            table.Rows.Add(fields);
-                        }
-                    }
-                    while (hasRecord);
-                }
-
-                table.AcceptChanges();
-            }
-
-            return table;
-        }
-
-        private List<T> GetObjectListFromCsv<T>(string csv, string tableName, Func<string[], T> mapObjectFromCsvFields)
-        {
-            List<T> list = new List<T>();
-            DataTableProperties properties = null;
-            bool hasRecord;
-
-            if (this.dataTablePropertiesDictionary.ContainsKey(tableName))
-                properties = this.dataTablePropertiesDictionary[tableName];
-
-            using (StringReader reader = new StringReader(csv))
-            {
-                string line = reader.ReadLine();
-
-                if (properties != null)
-                {
-                    string[] headers = GetValuesFromCsvLine(line, properties);
-
-                    do
-                    {
-                        line = reader.ReadLine();
-                        hasRecord = !string.IsNullOrEmpty(line);
-
-                        if (hasRecord)
-                        {
-                            string[] fields = GetValuesFromCsvLine(line, properties);
-                            list.Add(mapObjectFromCsvFields(fields));
-                        }
-                    }
-                    while (hasRecord);
-                }
-                else
-                {
-                    string[] headers = line.Split(this.Separator);
-
-                    do
-                    {
-                        line = reader.ReadLine();
-                        hasRecord = !string.IsNullOrEmpty(line);
-
-                        if (hasRecord)
-                        {
-                            string[] fields = line.Split(this.Separator);
-                            list.Add(mapObjectFromCsvFields(fields));
-                        }
-                    }
-                    while (hasRecord);
-                }
-            }
-
-            return list;
-        }
-
-        private string[] GetValuesFromCsvLine(string line, DataTableProperties properties)
-        {
-            string[] fields = new string[properties.ColumnProperties.Length];
-            int startIndex = 0;
-            int endIndex;
-            
-            for (int i = 0; i < properties.ColumnProperties.Length; i++)
-            {
-                bool escapeText = EscapeText(properties, properties.ColumnProperties[i].ColumnName);
-
-                if (escapeText)
-                {
-                    endIndex = line.IndexOf(QUOTE + this.Separator, startIndex);
-                    startIndex++;
-                }
-                else
-                {
-                    endIndex = line.IndexOf(this.Separator, startIndex);
-                }
-
-                if (endIndex >= 0 && (endIndex < (line.Length - 1)))
-                {
-                    string field = escapeText ? line.Substring(startIndex, endIndex - startIndex) : line.Substring(startIndex, endIndex - startIndex);
-                    fields[i] = field;
-                    startIndex = endIndex + (escapeText ? 2 : 1);
-                }
-                else if (endIndex == -1)
-                {
-                    string field = escapeText ? line.Substring(startIndex, line.Length - startIndex - 1) : line.Substring(startIndex);
-                    fields[i] = field;
-                }
-            }
-
-            return fields;
         }
 
         private object ReadFromBinaryFile(string binaryFilePath)
