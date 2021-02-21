@@ -7,7 +7,12 @@ namespace SimplePortableDatabase
 {
     internal class ObjectListStorage : BaseStorage
     {
-        internal List<T> GetObjectListFromCsv<T>(string csv, DataTableProperties properties, char separator, Func<string[], T> mapObjectFromCsvFields)
+        internal ObjectListStorage(DataTableProperties properties, char separator) : base(properties, separator)
+        {
+
+        }
+
+        internal List<T> GetObjectListFromCsv<T>(string csv, Func<string[], T> mapObjectFromCsvFields)
         {
             List<T> list = new List<T>();
             bool hasRecord;
@@ -16,9 +21,9 @@ namespace SimplePortableDatabase
             {
                 string line = reader.ReadLine();
 
-                if (properties != null)
+                if (this.Properties != null)
                 {
-                    string[] headers = GetValuesFromCsvLine(line, properties, separator);
+                    string[] headers = GetValuesFromCsvLine(line);
 
                     do
                     {
@@ -27,7 +32,7 @@ namespace SimplePortableDatabase
 
                         if (hasRecord)
                         {
-                            string[] fields = GetValuesFromCsvLine(line, properties, separator);
+                            string[] fields = GetValuesFromCsvLine(line);
                             list.Add(mapObjectFromCsvFields(fields));
                         }
                     }
@@ -35,7 +40,7 @@ namespace SimplePortableDatabase
                 }
                 else
                 {
-                    string[] headers = line.Split(separator);
+                    string[] headers = line.Split(this.Separator);
 
                     do
                     {
@@ -44,7 +49,7 @@ namespace SimplePortableDatabase
 
                         if (hasRecord)
                         {
-                            string[] fields = line.Split(separator);
+                            string[] fields = line.Split(this.Separator);
                             list.Add(mapObjectFromCsvFields(fields));
                         }
                     }
@@ -55,28 +60,28 @@ namespace SimplePortableDatabase
             return list;
         }
 
-        internal string GetCsvFromObjectList<T>(List<T> list, string tableName, DataTableProperties properties, char separator, Func<T, int, object> mapCsvFieldIndexToCsvField)
+        internal string GetCsvFromObjectList<T>(List<T> list, string tableName, Func<T, int, object> mapCsvFieldIndexToCsvField)
         {
             StringBuilder builder = new StringBuilder();
             
-            if (properties == null)
+            if (this.Properties == null)
                 throw new Exception($"Properties must be defined for the columns in the table {tableName}.");
 
-            for (int i = 0; i < properties.ColumnProperties.Length; i++)
+            for (int i = 0; i < this.Properties.ColumnProperties.Length; i++)
             {
-                if (EscapeText(properties, properties.ColumnProperties[i].ColumnName))
+                if (EscapeText(this.Properties.ColumnProperties[i].ColumnName))
                 {
                     builder.Append(QUOTE);
-                    builder.Append(properties.ColumnProperties[i].ColumnName);
+                    builder.Append(this.Properties.ColumnProperties[i].ColumnName);
                     builder.Append(QUOTE);
                 }
                 else
                 {
-                    builder.Append(properties.ColumnProperties[i].ColumnName);
+                    builder.Append(this.Properties.ColumnProperties[i].ColumnName);
                 }
 
-                if (i < properties.ColumnProperties.Length - 1)
-                    builder.Append(separator);
+                if (i < this.Properties.ColumnProperties.Length - 1)
+                    builder.Append(this.Separator);
             }
 
             builder.Append(Environment.NewLine);
@@ -85,9 +90,9 @@ namespace SimplePortableDatabase
             {
                 T row = list[i];
 
-                for (int j = 0; j < properties.ColumnProperties.Length; j++)
+                for (int j = 0; j < this.Properties.ColumnProperties.Length; j++)
                 {
-                    if (EscapeText(properties, properties.ColumnProperties[j].ColumnName))
+                    if (EscapeText(this.Properties.ColumnProperties[j].ColumnName))
                     {
                         builder.Append(QUOTE);
                         builder.Append(mapCsvFieldIndexToCsvField(row, j));
@@ -98,8 +103,8 @@ namespace SimplePortableDatabase
                         builder.Append(mapCsvFieldIndexToCsvField(row, j));
                     }
 
-                    if (j < properties.ColumnProperties.Length - 1)
-                        builder.Append(separator);
+                    if (j < this.Properties.ColumnProperties.Length - 1)
+                        builder.Append(this.Separator);
                 }
 
                 builder.Append(Environment.NewLine);
