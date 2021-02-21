@@ -32,7 +32,7 @@ namespace SimplePortableDatabase
             if (dataTableProperties == null)
                 throw new ArgumentNullException(nameof(dataTableProperties));
 
-            if (dataTableProperties.ColumnProperties == null || (dataTableProperties.ColumnProperties != null && dataTableProperties.ColumnProperties.Length == 0))
+            if (dataTableProperties.ColumnProperties == null || dataTableProperties.ColumnProperties.Length == 0)
                 throw new ArgumentException("Column properties must not be empty.");
 
             if (dataTableProperties.ColumnProperties.Count(c => string.IsNullOrWhiteSpace(c.ColumnName)) > 0)
