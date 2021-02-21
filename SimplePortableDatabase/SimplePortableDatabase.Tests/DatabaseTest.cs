@@ -797,6 +797,296 @@ namespace SimplePortableDatabase.Tests
         }
 
         [Fact]
+        public void ReadObjectList_AllColumnsWithEscapedText()
+        {
+            string csv = "\"FolderId\";\"FileName\";\"FileSize\";\"ImageRotation\";\"PixelWidth\";\"PixelHeight\";\"ThumbnailPixelWidth\";\"ThumbnailPixelHeight\";\"ThumbnailCreationDateTime\";\"Description\";\"Hash\"\r\n" +
+                "\"876283c6-780e-4ad5-975c-be63044c087a\";\"20200720175810_3.jpg\";\"363888\";\"Rotate0\";\"1920\";\"1080\";\"200\";\"112\";\"25/07/2020 9:45:47\";\"First file description\";\"4e50d5c7f1a64b5d61422382ac822641ad4e5b943aca9ade955f4655f799558bb0ae9c342ee3ead0949b32019b25606bd16988381108f56bb6c6dd673edaa1e4\"\r\n" +
+                "\"876283c6-780e-4ad5-975c-be63044c087a\";\"20200720175816_3.jpg\";\"343633\";\"Rotate0\";\"1920\";\"1080\";\"200\";\"112\";\"25/07/2020 9:45:47\";\"Second file description; Includes separator character escaped.\";\"0af8f118b7d606e5d174643727bd3c0c6028b52c50481585274fd572110b108c7a0d7901227f75a72b44c89335e002a65e8137ff5b238ab1c0bba0505e783124\"\r\n";
+            string tableName = "assets" + Guid.NewGuid();
+            string filePath = Path.Combine("TestData", "Tables", tableName + ".db");
+
+            Database portableDatabase = new Database();
+            portableDatabase.Initialize("TestData", ';');
+
+            File.WriteAllText(filePath, csv);
+
+            portableDatabase.SetDataTableProperties(new DataTableProperties
+            {
+                TableName = tableName,
+                ColumnProperties = new ColumnProperties[]
+                {
+                    new ColumnProperties { ColumnName = "FolderId", EscapeText = true },
+                    new ColumnProperties { ColumnName = "FileName", EscapeText = true },
+                    new ColumnProperties { ColumnName = "FileSize", EscapeText = true },
+                    new ColumnProperties { ColumnName = "ImageRotation", EscapeText = true },
+                    new ColumnProperties { ColumnName = "PixelWidth", EscapeText = true },
+                    new ColumnProperties { ColumnName = "PixelHeight", EscapeText = true },
+                    new ColumnProperties { ColumnName = "ThumbnailPixelWidth", EscapeText = true },
+                    new ColumnProperties { ColumnName = "ThumbnailPixelHeight", EscapeText = true },
+                    new ColumnProperties { ColumnName = "ThumbnailCreationDateTime", EscapeText = true },
+                    new ColumnProperties { ColumnName = "Description", EscapeText = true },
+                    new ColumnProperties { ColumnName = "Hash", EscapeText = true }
+                }
+            });
+
+            List<TestRecord> list = portableDatabase.ReadObjectList(tableName, f =>
+                new TestRecord
+                {
+                    FolderId = f[0],
+                    FileName = f[1],
+                    FileSize = f[2],
+                    ImageRotation = f[3],
+                    PixelWidth = f[4],
+                    PixelHeight = f[5],
+                    ThumbnailPixelWidth = f[6],
+                    ThumbnailPixelHeight = f[7],
+                    ThumbnailCreationDateTime = f[8],
+                    Description = f[9],
+                    Hash = f[10]
+                });
+
+            list.Should().HaveCount(2);
+
+            list[0].FolderId.Should().Be("876283c6-780e-4ad5-975c-be63044c087a");
+            list[0].FileName.Should().Be("20200720175810_3.jpg");
+            list[0].FileSize.Should().Be("363888");
+            list[0].ImageRotation.Should().Be("Rotate0");
+            list[0].PixelWidth.Should().Be("1920");
+            list[0].PixelHeight.Should().Be("1080");
+            list[0].ThumbnailPixelWidth.Should().Be("200");
+            list[0].ThumbnailPixelHeight.Should().Be("112");
+            list[0].ThumbnailCreationDateTime.Should().Be("25/07/2020 9:45:47");
+            list[0].Description.Should().Be("First file description");
+            list[0].Hash.Should().Be("4e50d5c7f1a64b5d61422382ac822641ad4e5b943aca9ade955f4655f799558bb0ae9c342ee3ead0949b32019b25606bd16988381108f56bb6c6dd673edaa1e4");
+
+            list[1].FolderId.Should().Be("876283c6-780e-4ad5-975c-be63044c087a");
+            list[1].FileName.Should().Be("20200720175816_3.jpg");
+            list[1].FileSize.Should().Be("343633");
+            list[1].ImageRotation.Should().Be("Rotate0");
+            list[1].PixelWidth.Should().Be("1920");
+            list[1].PixelHeight.Should().Be("1080");
+            list[1].ThumbnailPixelWidth.Should().Be("200");
+            list[1].ThumbnailPixelHeight.Should().Be("112");
+            list[1].ThumbnailCreationDateTime.Should().Be("25/07/2020 9:45:47");
+            list[1].Description.Should().Be("Second file description; Includes separator character escaped.");
+            list[1].Hash.Should().Be("0af8f118b7d606e5d174643727bd3c0c6028b52c50481585274fd572110b108c7a0d7901227f75a72b44c89335e002a65e8137ff5b238ab1c0bba0505e783124");
+            
+            portableDatabase.Diagnostics.LastReadFilePath.Should().Be(filePath);
+            portableDatabase.Diagnostics.LastReadFileRaw.Should().Be(csv);
+        }
+
+        [Fact]
+        public void ReadObjectList_AllColumnsWithUnescapedText()
+        {
+            string csv = "FolderId;FileName;FileSize;ImageRotation;PixelWidth;PixelHeight;ThumbnailPixelWidth;ThumbnailPixelHeight;ThumbnailCreationDateTime;Hash\r\n" +
+                "876283c6-780e-4ad5-975c-be63044c087a;20200720175810_3.jpg;363888;Rotate0;1920;1080;200;112;25/07/2020 9:45:47;4e50d5c7f1a64b5d61422382ac822641ad4e5b943aca9ade955f4655f799558bb0ae9c342ee3ead0949b32019b25606bd16988381108f56bb6c6dd673edaa1e4\r\n" +
+                "876283c6-780e-4ad5-975c-be63044c087a;20200720175816_3.jpg;343633;Rotate0;1920;1080;200;112;25/07/2020 9:45:47;0af8f118b7d606e5d174643727bd3c0c6028b52c50481585274fd572110b108c7a0d7901227f75a72b44c89335e002a65e8137ff5b238ab1c0bba0505e783124\r\n";
+            string tableName = "assets" + Guid.NewGuid();
+            string filePath = Path.Combine("TestData", "Tables", tableName + ".db");
+
+            Database portableDatabase = new Database();
+            portableDatabase.Initialize("TestData", ';');
+
+            File.WriteAllText(filePath, csv);
+
+            portableDatabase.SetDataTableProperties(new DataTableProperties
+            {
+                TableName = tableName,
+                ColumnProperties = new ColumnProperties[]
+                {
+                    new ColumnProperties { ColumnName = "FolderId", EscapeText = false },
+                    new ColumnProperties { ColumnName = "FileName", EscapeText = false },
+                    new ColumnProperties { ColumnName = "FileSize", EscapeText = false },
+                    new ColumnProperties { ColumnName = "ImageRotation", EscapeText = false },
+                    new ColumnProperties { ColumnName = "PixelWidth", EscapeText = false },
+                    new ColumnProperties { ColumnName = "PixelHeight", EscapeText = false },
+                    new ColumnProperties { ColumnName = "ThumbnailPixelWidth", EscapeText = false },
+                    new ColumnProperties { ColumnName = "ThumbnailPixelHeight", EscapeText = false },
+                    new ColumnProperties { ColumnName = "ThumbnailCreationDateTime", EscapeText = false },
+                    new ColumnProperties { ColumnName = "Hash", EscapeText = false }
+                }
+            });
+
+            List<TestRecord> list = portableDatabase.ReadObjectList(tableName, f =>
+                new TestRecord
+                {
+                    FolderId = f[0],
+                    FileName = f[1],
+                    FileSize = f[2],
+                    ImageRotation = f[3],
+                    PixelWidth = f[4],
+                    PixelHeight = f[5],
+                    ThumbnailPixelWidth = f[6],
+                    ThumbnailPixelHeight = f[7],
+                    ThumbnailCreationDateTime = f[8],
+                    Hash = f[9]
+                });
+
+            list.Should().HaveCount(2);
+
+            list[0].FolderId.Should().Be("876283c6-780e-4ad5-975c-be63044c087a");
+            list[0].FileName.Should().Be("20200720175810_3.jpg");
+            list[0].FileSize.Should().Be("363888");
+            list[0].ImageRotation.Should().Be("Rotate0");
+            list[0].PixelWidth.Should().Be("1920");
+            list[0].PixelHeight.Should().Be("1080");
+            list[0].ThumbnailPixelWidth.Should().Be("200");
+            list[0].ThumbnailPixelHeight.Should().Be("112");
+            list[0].ThumbnailCreationDateTime.Should().Be("25/07/2020 9:45:47");
+            list[0].Hash.Should().Be("4e50d5c7f1a64b5d61422382ac822641ad4e5b943aca9ade955f4655f799558bb0ae9c342ee3ead0949b32019b25606bd16988381108f56bb6c6dd673edaa1e4");
+
+            list[1].FolderId.Should().Be("876283c6-780e-4ad5-975c-be63044c087a");
+            list[1].FileName.Should().Be("20200720175816_3.jpg");
+            list[1].FileSize.Should().Be("343633");
+            list[1].ImageRotation.Should().Be("Rotate0");
+            list[1].PixelWidth.Should().Be("1920");
+            list[1].PixelHeight.Should().Be("1080");
+            list[1].ThumbnailPixelWidth.Should().Be("200");
+            list[1].ThumbnailPixelHeight.Should().Be("112");
+            list[1].ThumbnailCreationDateTime.Should().Be("25/07/2020 9:45:47");
+            list[1].Hash.Should().Be("0af8f118b7d606e5d174643727bd3c0c6028b52c50481585274fd572110b108c7a0d7901227f75a72b44c89335e002a65e8137ff5b238ab1c0bba0505e783124");
+
+            portableDatabase.Diagnostics.LastReadFilePath.Should().Be(filePath);
+            portableDatabase.Diagnostics.LastReadFileRaw.Should().Be(csv);
+        }
+
+        [Fact]
+        public void ReadObjectList_AllColumnsWithUnescapedTextWithoutDataTableProperties()
+        {
+            string csv = "FolderId;FileName;FileSize;ImageRotation;PixelWidth;PixelHeight;ThumbnailPixelWidth;ThumbnailPixelHeight;ThumbnailCreationDateTime;Hash\r\n" +
+                "876283c6-780e-4ad5-975c-be63044c087a;20200720175810_3.jpg;363888;Rotate0;1920;1080;200;112;25/07/2020 9:45:47;4e50d5c7f1a64b5d61422382ac822641ad4e5b943aca9ade955f4655f799558bb0ae9c342ee3ead0949b32019b25606bd16988381108f56bb6c6dd673edaa1e4\r\n" +
+                "876283c6-780e-4ad5-975c-be63044c087a;20200720175816_3.jpg;343633;Rotate0;1920;1080;200;112;25/07/2020 9:45:47;0af8f118b7d606e5d174643727bd3c0c6028b52c50481585274fd572110b108c7a0d7901227f75a72b44c89335e002a65e8137ff5b238ab1c0bba0505e783124\r\n";
+            string tableName = "assets" + Guid.NewGuid();
+            string filePath = Path.Combine("TestData", "Tables", tableName + ".db");
+
+            Database portableDatabase = new Database();
+            portableDatabase.Initialize("TestData", ';');
+
+            File.WriteAllText(filePath, csv);
+
+            var list = portableDatabase.ReadObjectList(tableName, f =>
+                new TestRecord
+                {
+                    FolderId = f[0],
+                    FileName = f[1],
+                    FileSize = f[2],
+                    ImageRotation = f[3],
+                    PixelWidth = f[4],
+                    PixelHeight = f[5],
+                    ThumbnailPixelWidth = f[6],
+                    ThumbnailPixelHeight = f[7],
+                    ThumbnailCreationDateTime = f[8],
+                    Hash = f[9]
+                });
+
+            list.Should().HaveCount(2);
+
+            list[0].FolderId.Should().Be("876283c6-780e-4ad5-975c-be63044c087a");
+            list[0].FileName.Should().Be("20200720175810_3.jpg");
+            list[0].FileSize.Should().Be("363888");
+            list[0].ImageRotation.Should().Be("Rotate0");
+            list[0].PixelWidth.Should().Be("1920");
+            list[0].PixelHeight.Should().Be("1080");
+            list[0].ThumbnailPixelWidth.Should().Be("200");
+            list[0].ThumbnailPixelHeight.Should().Be("112");
+            list[0].ThumbnailCreationDateTime.Should().Be("25/07/2020 9:45:47");
+            list[0].Hash.Should().Be("4e50d5c7f1a64b5d61422382ac822641ad4e5b943aca9ade955f4655f799558bb0ae9c342ee3ead0949b32019b25606bd16988381108f56bb6c6dd673edaa1e4");
+
+            list[1].FolderId.Should().Be("876283c6-780e-4ad5-975c-be63044c087a");
+            list[1].FileName.Should().Be("20200720175816_3.jpg");
+            list[1].FileSize.Should().Be("343633");
+            list[1].ImageRotation.Should().Be("Rotate0");
+            list[1].PixelWidth.Should().Be("1920");
+            list[1].PixelHeight.Should().Be("1080");
+            list[1].ThumbnailPixelWidth.Should().Be("200");
+            list[1].ThumbnailPixelHeight.Should().Be("112");
+            list[1].ThumbnailCreationDateTime.Should().Be("25/07/2020 9:45:47");
+            list[1].Hash.Should().Be("0af8f118b7d606e5d174643727bd3c0c6028b52c50481585274fd572110b108c7a0d7901227f75a72b44c89335e002a65e8137ff5b238ab1c0bba0505e783124");
+
+            portableDatabase.Diagnostics.LastReadFilePath.Should().Be(filePath);
+            portableDatabase.Diagnostics.LastReadFileRaw.Should().Be(csv);
+        }
+
+        [Fact]
+        public void ReadObjectList_SomeColumnsWithEscapedText()
+        {
+            string csv = "\"FolderId\";FileName;FileSize;ImageRotation;PixelWidth;PixelHeight;ThumbnailPixelWidth;ThumbnailPixelHeight;ThumbnailCreationDateTime;\"Description\";Hash\r\n" +
+                "\"876283c6-780e-4ad5-975c-be63044c087a\";20200720175810_3.jpg;363888;Rotate0;1920;1080;200;112;25/07/2020 9:45:47;\"First file description\";4e50d5c7f1a64b5d61422382ac822641ad4e5b943aca9ade955f4655f799558bb0ae9c342ee3ead0949b32019b25606bd16988381108f56bb6c6dd673edaa1e4\r\n" +
+                "\"876283c6-780e-4ad5-975c-be63044c087a\";20200720175816_3.jpg;343633;Rotate0;1920;1080;200;112;25/07/2020 9:45:47;\"Second file description; Includes separator character escaped.\";0af8f118b7d606e5d174643727bd3c0c6028b52c50481585274fd572110b108c7a0d7901227f75a72b44c89335e002a65e8137ff5b238ab1c0bba0505e783124\r\n";
+            string tableName = "assets" + Guid.NewGuid();
+            string filePath = Path.Combine("TestData", "Tables", tableName + ".db");
+
+            Database portableDatabase = new Database();
+            portableDatabase.Initialize("TestData", ';');
+
+            File.WriteAllText(filePath, csv);
+
+            portableDatabase.SetDataTableProperties(new DataTableProperties
+            {
+                TableName = tableName,
+                ColumnProperties = new ColumnProperties[]
+                {
+                    new ColumnProperties { ColumnName = "FolderId", EscapeText = true },
+                    new ColumnProperties { ColumnName = "FileName", EscapeText = false },
+                    new ColumnProperties { ColumnName = "FileSize", EscapeText = false },
+                    new ColumnProperties { ColumnName = "ImageRotation", EscapeText = false },
+                    new ColumnProperties { ColumnName = "PixelWidth", EscapeText = false },
+                    new ColumnProperties { ColumnName = "PixelHeight", EscapeText = false },
+                    new ColumnProperties { ColumnName = "ThumbnailPixelWidth", EscapeText = false },
+                    new ColumnProperties { ColumnName = "ThumbnailPixelHeight", EscapeText = false },
+                    new ColumnProperties { ColumnName = "ThumbnailCreationDateTime", EscapeText = false },
+                    new ColumnProperties { ColumnName = "Description", EscapeText = true },
+                    new ColumnProperties { ColumnName = "Hash", EscapeText = false },
+                }
+            });
+
+            List<TestRecord> list = portableDatabase.ReadObjectList(tableName, f =>
+                new TestRecord
+                {
+                    FolderId = f[0],
+                    FileName = f[1],
+                    FileSize = f[2],
+                    ImageRotation = f[3],
+                    PixelWidth = f[4],
+                    PixelHeight = f[5],
+                    ThumbnailPixelWidth = f[6],
+                    ThumbnailPixelHeight = f[7],
+                    ThumbnailCreationDateTime = f[8],
+                    Description = f[9],
+                    Hash = f[10]
+                });
+
+            list.Should().HaveCount(2);
+
+            list[0].FolderId.Should().Be("876283c6-780e-4ad5-975c-be63044c087a");
+            list[0].FileName.Should().Be("20200720175810_3.jpg");
+            list[0].FileSize.Should().Be("363888");
+            list[0].ImageRotation.Should().Be("Rotate0");
+            list[0].PixelWidth.Should().Be("1920");
+            list[0].PixelHeight.Should().Be("1080");
+            list[0].ThumbnailPixelWidth.Should().Be("200");
+            list[0].ThumbnailPixelHeight.Should().Be("112");
+            list[0].ThumbnailCreationDateTime.Should().Be("25/07/2020 9:45:47");
+            list[0].Description.Should().Be("First file description");
+            list[0].Hash.Should().Be("4e50d5c7f1a64b5d61422382ac822641ad4e5b943aca9ade955f4655f799558bb0ae9c342ee3ead0949b32019b25606bd16988381108f56bb6c6dd673edaa1e4");
+
+            list[1].FolderId.Should().Be("876283c6-780e-4ad5-975c-be63044c087a");
+            list[1].FileName.Should().Be("20200720175816_3.jpg");
+            list[1].FileSize.Should().Be("343633");
+            list[1].ImageRotation.Should().Be("Rotate0");
+            list[1].PixelWidth.Should().Be("1920");
+            list[1].PixelHeight.Should().Be("1080");
+            list[1].ThumbnailPixelWidth.Should().Be("200");
+            list[1].ThumbnailPixelHeight.Should().Be("112");
+            list[1].ThumbnailCreationDateTime.Should().Be("25/07/2020 9:45:47");
+            list[1].Description.Should().Be("Second file description; Includes separator character escaped.");
+            list[1].Hash.Should().Be("0af8f118b7d606e5d174643727bd3c0c6028b52c50481585274fd572110b108c7a0d7901227f75a72b44c89335e002a65e8137ff5b238ab1c0bba0505e783124");
+
+            portableDatabase.Diagnostics.LastReadFilePath.Should().Be(filePath);
+            portableDatabase.Diagnostics.LastReadFileRaw.Should().Be(csv);
+        }
+
+        [Fact]
         public void SetDataTableProperties_NullDataTableProperties_ThrowException()
         {
             DataTable table = new DataTable();
