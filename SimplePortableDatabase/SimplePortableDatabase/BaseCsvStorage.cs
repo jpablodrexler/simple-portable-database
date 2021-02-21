@@ -3,13 +3,13 @@ using System.Linq;
 
 namespace SimplePortableDatabase
 {
-    internal abstract class BaseStorage
+    internal abstract class BaseCsvStorage
     {
         protected const string QUOTE = "\"";
         protected DataTableProperties Properties { get; set; }
         protected char Separator { get; set; }
 
-        internal BaseStorage(DataTableProperties properties, char separator)
+        internal BaseCsvStorage(DataTableProperties properties, char separator)
         {
             this.Properties = properties;
             this.Separator = separator;

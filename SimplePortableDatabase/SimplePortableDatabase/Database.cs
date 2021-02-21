@@ -55,7 +55,7 @@ namespace SimplePortableDatabase
         private DataTableProperties GetDataTableProperties(string tableName)
         {
             return this.dataTablePropertiesDictionary.ContainsKey(tableName) ?
-                                this.dataTablePropertiesDictionary[tableName] : null;
+                this.dataTablePropertiesDictionary[tableName] : null;
         }
 
         public List<T> ReadObjectList<T>(string tableName, Func<string[], T> mapObjectFromCsvFields)
@@ -63,7 +63,7 @@ namespace SimplePortableDatabase
             string dataFilePath = ResolveTableFilePath(this.DataDirectory, tableName);
             this.Diagnostics = new Diagnostics { LastReadFilePath = dataFilePath };
             DataTableProperties properties = GetDataTableProperties(tableName);
-            return new ObjectListStorage(properties, this.Separator).ReadObjectList(dataFilePath, tableName, mapObjectFromCsvFields, this.Diagnostics);
+            return new ObjectListStorage(properties, this.Separator).ReadObjectList(dataFilePath, mapObjectFromCsvFields, this.Diagnostics);
         }
 
         public void WriteDataTable(DataTable dataTable)
@@ -104,39 +104,14 @@ namespace SimplePortableDatabase
         {
             string blobFilePath = ResolveBlobFilePath(this.DataDirectory, blobName);
             this.Diagnostics = new Diagnostics { LastReadFilePath = blobFilePath };
-            return ReadFromBinaryFile(blobFilePath);
+            return new BlobStorage().ReadFromBinaryFile(blobFilePath);
         }
 
         public void WriteBlob(object blob, string blobName)
         {
             string blobFilePath = ResolveBlobFilePath(this.DataDirectory, blobName);
             this.Diagnostics = new Diagnostics { LastWriteFilePath = blobFilePath, LastWriteFileRaw = blob };
-            WriteToBinaryFile(blob, blobFilePath);
-        }
-
-        private object ReadFromBinaryFile(string binaryFilePath)
-        {
-            object result = null;
-
-            if (File.Exists(binaryFilePath))
-            {
-                using (FileStream fileStream = new FileStream(binaryFilePath, FileMode.Open))
-                {
-                    BinaryFormatter binaryFormatter = new BinaryFormatter();
-                    result = binaryFormatter.Deserialize(fileStream);
-                }
-            }
-
-            return result;
-        }
-
-        private void WriteToBinaryFile(object anObject, string binaryFilePath)
-        {
-            using (FileStream fileStream = new FileStream(binaryFilePath, FileMode.Create))
-            {
-                BinaryFormatter binaryFormatter = new BinaryFormatter();
-                binaryFormatter.Serialize(fileStream, anObject);
-            }
+            new BlobStorage().WriteToBinaryFile(blob, blobFilePath);
         }
 
         public void InitializeDirectory(string dataDirectory)
