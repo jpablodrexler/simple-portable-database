@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-
-namespace SimplePortableDatabase
+﻿namespace SimplePortableDatabase
 {
     internal abstract class BaseCsvStorage
     {
