@@ -746,7 +746,7 @@ namespace SimplePortableDatabase.Tests
 
             DataTable table = portableDatabase.ReadDataTable(tableName);
             
-            table.Columns.Should().HaveCount(10);
+            table.Columns.Count.Should().Be(10);
             table.Columns[0].ColumnName.Should().Be("FolderId");
             table.Columns[1].ColumnName.Should().Be("FileName");
             table.Columns[2].ColumnName.Should().Be("FileSize");
@@ -759,7 +759,7 @@ namespace SimplePortableDatabase.Tests
             table.Columns[9].ColumnName.Should().Be("Hash");
 
             table.TableName.Should().Be(tableName);
-            table.Rows.Should().HaveCount(2);
+            table.Rows.Count.Should().Be(2);
             
             table.Rows[0]["FolderId"].Should().Be("876283c6-780e-4ad5-975c-be63044c087a");
             table.Rows[0]["FileName"].Should().Be("20200720175810_3.jpg");
@@ -803,7 +803,7 @@ namespace SimplePortableDatabase.Tests
 
             DataTable table = portableDatabase.ReadDataTable(tableName);
 
-            table.Columns.Should().HaveCount(10);
+            table.Columns.Count.Should().Be(10);
             table.Columns[0].ColumnName.Should().Be("FolderId");
             table.Columns[1].ColumnName.Should().Be("FileName");
             table.Columns[2].ColumnName.Should().Be("FileSize");
@@ -816,7 +816,7 @@ namespace SimplePortableDatabase.Tests
             table.Columns[9].ColumnName.Should().Be("Hash");
 
             table.TableName.Should().Be(tableName);
-            table.Rows.Should().HaveCount(2);
+            table.Rows.Count.Should().Be(2);
 
             table.Rows[0]["FolderId"].Should().Be("876283c6-780e-4ad5-975c-be63044c087a");
             table.Rows[0]["FileName"].Should().Be("20200720175810_3.jpg");
@@ -879,7 +879,7 @@ namespace SimplePortableDatabase.Tests
 
             DataTable table = portableDatabase.ReadDataTable(tableName);
 
-            table.Columns.Should().HaveCount(11);
+            table.Columns.Count.Should().Be(11);
             table.Columns[0].ColumnName.Should().Be("FolderId");
             table.Columns[1].ColumnName.Should().Be("FileName");
             table.Columns[2].ColumnName.Should().Be("FileSize");
@@ -893,7 +893,7 @@ namespace SimplePortableDatabase.Tests
             table.Columns[10].ColumnName.Should().Be("Hash");
 
             table.TableName.Should().Be(tableName);
-            table.Rows.Should().HaveCount(2);
+            table.Rows.Count.Should().Be(2);
 
             table.Rows[0]["FolderId"].Should().Be("876283c6-780e-4ad5-975c-be63044c087a");
             table.Rows[0]["FileName"].Should().Be("20200720175810_3.jpg");
@@ -958,7 +958,7 @@ namespace SimplePortableDatabase.Tests
 
             DataTable table = portableDatabase.ReadDataTable(tableName);
 
-            table.Columns.Should().HaveCount(11);
+            table.Columns.Count.Should().Be(11);
             table.Columns[0].ColumnName.Should().Be("FolderId");
             table.Columns[1].ColumnName.Should().Be("FileName");
             table.Columns[2].ColumnName.Should().Be("FileSize");
@@ -972,7 +972,7 @@ namespace SimplePortableDatabase.Tests
             table.Columns[10].ColumnName.Should().Be("Hash");
 
             table.TableName.Should().Be(tableName);
-            table.Rows.Should().HaveCount(2);
+            table.Rows.Count.Should().Be(2);
 
             table.Rows[0]["FolderId"].Should().Be("876283c6-780e-4ad5-975c-be63044c087a");
             table.Rows[0]["FileName"].Should().Be("20200720175810_3.jpg");
