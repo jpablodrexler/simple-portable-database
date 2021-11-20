@@ -1,0 +1,27 @@
+name: Test
+
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+    branches:
+    - main
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.x
+    - name: Restore dependencies
+      run: dotnet restore SimplePortableDatabase/SimplePortableDatabase.sln
+    - name: Build
+      run: dotnet build --no-restore --configuration Release SimplePortableDatabase/SimplePortableDatabase.sln
+    - name: Test
+      run: dotnet test --no-build --configuration Release --verbosity normal SimplePortableDatabase/SimplePortableDatabase.Tests/SimplePortableDatabase.Tests.csproj
