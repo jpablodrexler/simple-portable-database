@@ -109,11 +109,23 @@ namespace SimplePortableDatabase
             new BlobStorage().WriteToBinaryFile(blob, blobFilePath);
         }
 
+        public void WriteBackup(DateTime backupDate)
+        {
+            string backupFilePath = ResolveBackupFilePath(this.DataDirectory, backupDate);
+            
+            if (!File.Exists(backupFilePath))
+            {
+                this.Diagnostics = new Diagnostics { LastWriteFilePath = backupFilePath };
+                new BackupStorage().WriteToZipFile(this.DataDirectory, backupFilePath);
+            }
+        }
+
         public void InitializeDirectory(string dataDirectory)
         {
             Directory.CreateDirectory(dataDirectory);
             Directory.CreateDirectory(GetTablesDirectory(dataDirectory));
             Directory.CreateDirectory(GetBlobsDirectory(dataDirectory));
+            Directory.CreateDirectory(GetBackupsDirectory(dataDirectory));
         }
 
         public string GetTablesDirectory(string dataDirectory)
@@ -126,6 +138,11 @@ namespace SimplePortableDatabase
             return Path.Combine(dataDirectory, "Blobs");
         }
 
+        public string GetBackupsDirectory(string dataDirectory)
+        {
+            return dataDirectory + "_Backups";
+        }
+
         public string ResolveTableFilePath(string dataDirectory, string entityName)
         {
             dataDirectory = !string.IsNullOrEmpty(dataDirectory) ? dataDirectory : string.Empty;
@@ -136,6 +153,13 @@ namespace SimplePortableDatabase
         public string ResolveBlobFilePath(string dataDirectory, string blobName)
         {
             return Path.Combine(GetBlobsDirectory(dataDirectory), blobName);
+        }
+
+        public string ResolveBackupFilePath(string dataDirectory, DateTime backupDate)
+        {
+            dataDirectory = !string.IsNullOrEmpty(dataDirectory) ? dataDirectory : string.Empty;
+            string fileName = backupDate.ToString("yyyyMMdd") + ".zip";
+            return Path.Combine(GetBackupsDirectory(dataDirectory), fileName);
         }
     }
 }

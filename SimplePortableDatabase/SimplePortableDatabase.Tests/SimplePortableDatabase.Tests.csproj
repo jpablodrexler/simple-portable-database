@@ -25,4 +25,9 @@
     <ProjectReference Include="..\SimplePortableDatabase\SimplePortableDatabase.csproj" />
   </ItemGroup>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="rmdir /S /Q $(OutDir)TestData" />
+    <Exec Command="rmdir /S /Q $(OutDir)TestData_Backups" />
+	<Exec Command="rmdir /S /Q $(OutDir)TestData_Backups_Test" />
+  </Target>
 </Project>

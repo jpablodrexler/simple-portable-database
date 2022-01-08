@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using System.IO.Compression;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using Xunit;
@@ -1498,6 +1499,30 @@ namespace SimplePortableDatabase.Tests
             
             blob.Should().HaveSameCount(expected);
             blob.Should().ContainInOrder(expected);
+        }
+
+        [Fact]
+        public void WriteBackup()
+        {
+            string backupName = "20220108.zip";
+            string filePath = Path.Combine("TestData_Backups", backupName);
+            
+            Database portableDatabase = new Database();
+            portableDatabase.Initialize("TestData", ';');
+            portableDatabase.WriteBackup(new DateTime(2022, 1, 8).Date);
+
+            portableDatabase.Diagnostics.LastWriteFilePath.Should().Be(filePath);
+
+            ZipFile.ExtractToDirectory(filePath, "TestData_Backups_Test");
+
+            var sourceDirectories = Directory.GetDirectories("TestData");
+            var backupDirectories = Directory.GetDirectories("TestData_Backups_Test");
+
+            sourceDirectories.Should().HaveSameCount(backupDirectories);
+            sourceDirectories[0].Should().Be(@"TestData\Blobs");
+            sourceDirectories[1].Should().Be(@"TestData\Tables");
+            backupDirectories[0].Should().Be(@"TestData_Backups_Test\Blobs");
+            backupDirectories[1].Should().Be(@"TestData_Backups_Test\Tables");
         }
     }
 
