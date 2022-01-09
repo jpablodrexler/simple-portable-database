@@ -126,6 +126,7 @@ namespace SimplePortableDatabase
             Directory.CreateDirectory(dataDirectory);
             Directory.CreateDirectory(GetTablesDirectory(dataDirectory));
             Directory.CreateDirectory(GetBlobsDirectory(dataDirectory));
+            // TODO: THE BACKUP DIRECTORY SHOULD BE INDEPENDENTLY CONFIGURED FROM THE DATA DIRECTORY, IN THE APPSETTINGS.JSON FILE.
             Directory.CreateDirectory(GetBackupsDirectory(dataDirectory));
         }
 
