@@ -41,7 +41,7 @@ namespace SimplePortableDatabase.Tests
             string tableName = "assets" + Guid.NewGuid();
             string filePath = Path.Combine("TestData", "Tables", tableName + ".db");
 
-            DataTable table = new DataTable(tableName);
+            DataTable table = new(tableName);
             table.Columns.Add("FolderId");
             table.Columns.Add("FileName");
             table.Columns.Add("FileSize");
@@ -81,7 +81,7 @@ namespace SimplePortableDatabase.Tests
 
             table.AcceptChanges();
 
-            Database portableDatabase = new Database();
+            Database portableDatabase = new();
             portableDatabase.Initialize("TestData", ';');
             portableDatabase.WriteDataTable(table);
 
@@ -101,7 +101,7 @@ namespace SimplePortableDatabase.Tests
             string tableName = "assets" + Guid.NewGuid();
             string filePath = Path.Combine("TestData", "Tables", tableName + ".db");
 
-            DataTable table = new DataTable(tableName);
+            DataTable table = new(tableName);
             table.Columns.Add("FolderId");
             table.Columns.Add("FileName");
             table.Columns.Add("FileSize");
@@ -144,7 +144,7 @@ namespace SimplePortableDatabase.Tests
 
             table.AcceptChanges();
 
-            Database portableDatabase = new Database();
+            Database portableDatabase = new();
             portableDatabase.Initialize("TestData", ';');
             portableDatabase.SetDataTableProperties(new DataTableProperties
             {
@@ -183,7 +183,7 @@ namespace SimplePortableDatabase.Tests
             string tableName = "assets" + Guid.NewGuid();
             string filePath = Path.Combine("TestData", "Tables", tableName + ".db");
 
-            DataTable table = new DataTable(tableName);
+            DataTable table = new(tableName);
             table.Columns.Add("FolderId");
             table.Columns.Add("FileName");
             table.Columns.Add("FileSize");
@@ -226,7 +226,7 @@ namespace SimplePortableDatabase.Tests
 
             table.AcceptChanges();
 
-            Database portableDatabase = new Database();
+            Database portableDatabase = new();
             portableDatabase.Initialize("TestData", ';');
             portableDatabase.SetDataTableProperties(new DataTableProperties
             {
@@ -256,7 +256,7 @@ namespace SimplePortableDatabase.Tests
             string tableName = "assets" + Guid.NewGuid();
             string filePath = Path.Combine("TestData", "Tables", tableName + ".db");
 
-            List<TestRecord> list = new List<TestRecord>
+            List<TestRecord> list = new()
             {
                 new TestRecord
                 {
@@ -286,7 +286,7 @@ namespace SimplePortableDatabase.Tests
                 }
             };
 
-            Database portableDatabase = new Database();
+            Database portableDatabase = new();
             portableDatabase.Initialize("TestData", ';');
             portableDatabase.SetDataTableProperties(new DataTableProperties
             {
@@ -340,7 +340,7 @@ namespace SimplePortableDatabase.Tests
             string tableName = "assets" + Guid.NewGuid();
             string filePath = Path.Combine("TestData", "Tables", tableName + ".db");
 
-            List<TestRecord> list = new List<TestRecord>
+            List<TestRecord> list = new()
             {
                 new TestRecord
                 {
@@ -372,7 +372,7 @@ namespace SimplePortableDatabase.Tests
                 }
             };
 
-            Database portableDatabase = new Database();
+            Database portableDatabase = new();
             portableDatabase.Initialize("TestData", ';');
             portableDatabase.SetDataTableProperties(new DataTableProperties
             {
@@ -428,7 +428,7 @@ namespace SimplePortableDatabase.Tests
             string tableName = "assets" + Guid.NewGuid();
             string filePath = Path.Combine("TestData", "Tables", tableName + ".db");
 
-            List<TestRecord> list = new List<TestRecord>
+            List<TestRecord> list = new()
             {
                 new TestRecord
                 {
@@ -460,7 +460,7 @@ namespace SimplePortableDatabase.Tests
                 }
             };
 
-            Database portableDatabase = new Database();
+            Database portableDatabase = new();
             portableDatabase.Initialize("TestData", ';');
             portableDatabase.SetDataTableProperties(new DataTableProperties
             {
@@ -515,7 +515,7 @@ namespace SimplePortableDatabase.Tests
 
             List<TestRecord> list = null;
 
-            Database portableDatabase = new Database();
+            Database portableDatabase = new();
             portableDatabase.Initialize("TestData", ';');
             portableDatabase.SetDataTableProperties(new DataTableProperties
             {
@@ -566,7 +566,7 @@ namespace SimplePortableDatabase.Tests
         [InlineData(" ")]
         public void WriteObjectList_InvalidTableName(string tableName)
         {
-            List<TestRecord> list = new List<TestRecord>
+            List<TestRecord> list = new()
             {
                 new TestRecord
                 {
@@ -598,7 +598,7 @@ namespace SimplePortableDatabase.Tests
                 }
             };
 
-            Database portableDatabase = new Database();
+            Database portableDatabase = new();
             portableDatabase.Initialize("TestData", ';');
             portableDatabase.SetDataTableProperties(new DataTableProperties
             {
@@ -653,7 +653,7 @@ namespace SimplePortableDatabase.Tests
             string tableName = "assets" + Guid.NewGuid();
             string filePath = Path.Combine("TestData", "Tables", tableName + ".db");
 
-            List<TestRecord> list = new List<TestRecord>
+            List<TestRecord> list = new()
             {
                 new TestRecord
                 {
@@ -685,10 +685,10 @@ namespace SimplePortableDatabase.Tests
                 }
             };
 
-            Database portableDatabase = new Database();
+            Database portableDatabase = new();
             portableDatabase.Initialize("TestData", ';');
 
-            Action action = new Action(() =>
+            Action action = new(() =>
             {
                 portableDatabase.WriteObjectList(list, tableName, (r, i) =>
                 {
@@ -722,7 +722,7 @@ namespace SimplePortableDatabase.Tests
             string tableName = "assets" + Guid.NewGuid();
             string filePath = Path.Combine("TestData", "Tables", tableName + ".db");
 
-            Database portableDatabase = new Database();
+            Database portableDatabase = new();
             portableDatabase.Initialize("TestData", ';');
 
             File.WriteAllText(filePath, csv);
@@ -797,7 +797,7 @@ namespace SimplePortableDatabase.Tests
             string tableName = "assets" + Guid.NewGuid();
             string filePath = Path.Combine("TestData", "Tables", tableName + ".db");
 
-            Database portableDatabase = new Database();
+            Database portableDatabase = new();
             portableDatabase.Initialize("TestData", ';');
 
             File.WriteAllText(filePath, csv);
@@ -854,7 +854,7 @@ namespace SimplePortableDatabase.Tests
             string tableName = "assets" + Guid.NewGuid();
             string filePath = Path.Combine("TestData", "Tables", tableName + ".db");
 
-            Database portableDatabase = new Database();
+            Database portableDatabase = new();
             portableDatabase.Initialize("TestData", ';');
 
             File.WriteAllText(filePath, csv);
@@ -933,7 +933,7 @@ namespace SimplePortableDatabase.Tests
             string tableName = "assets" + Guid.NewGuid();
             string filePath = Path.Combine("TestData", "Tables", tableName + ".db");
 
-            Database portableDatabase = new Database();
+            Database portableDatabase = new();
             portableDatabase.Initialize("TestData", ';');
 
             File.WriteAllText(filePath, csv);
@@ -1012,7 +1012,7 @@ namespace SimplePortableDatabase.Tests
             string tableName = "assets" + Guid.NewGuid();
             string filePath = Path.Combine("TestData", "Tables", tableName + ".db");
 
-            Database portableDatabase = new Database();
+            Database portableDatabase = new();
             portableDatabase.Initialize("TestData", ';');
 
             File.WriteAllText(filePath, csv);
@@ -1091,7 +1091,7 @@ namespace SimplePortableDatabase.Tests
             string tableName = "assets" + Guid.NewGuid();
             string filePath = Path.Combine("TestData", "Tables", tableName + ".db");
 
-            Database portableDatabase = new Database();
+            Database portableDatabase = new();
             portableDatabase.Initialize("TestData", ';');
 
             File.WriteAllText(filePath, csv);
@@ -1166,7 +1166,7 @@ namespace SimplePortableDatabase.Tests
             string tableName = "assets" + Guid.NewGuid();
             string filePath = Path.Combine("TestData", "Tables", tableName + ".db");
 
-            Database portableDatabase = new Database();
+            Database portableDatabase = new();
             portableDatabase.Initialize("TestData", ';');
 
             File.WriteAllText(filePath, csv);
@@ -1223,7 +1223,7 @@ namespace SimplePortableDatabase.Tests
             string tableName = "assets" + Guid.NewGuid();
             string filePath = Path.Combine("TestData", "Tables", tableName + ".db");
 
-            Database portableDatabase = new Database();
+            Database portableDatabase = new();
             portableDatabase.Initialize("TestData", ';');
 
             File.WriteAllText(filePath, csv);
@@ -1296,9 +1296,9 @@ namespace SimplePortableDatabase.Tests
         [Fact]
         public void SetDataTableProperties_NullDataTableProperties_ThrowException()
         {
-            DataTable table = new DataTable();
+            DataTable table = new();
 
-            Database portableDatabase = new Database();
+            Database portableDatabase = new();
             portableDatabase.Initialize("TestData", ';');
 
             Action action = () =>
@@ -1310,9 +1310,9 @@ namespace SimplePortableDatabase.Tests
         [Fact]
         public void SetDataTableProperties_NoColumnsProperties_ThrowException()
         {
-            DataTable table = new DataTable();
+            DataTable table = new();
 
-            Database portableDatabase = new Database();
+            Database portableDatabase = new();
             portableDatabase.Initialize("TestData", ';');
 
             Action action = () =>
@@ -1327,7 +1327,7 @@ namespace SimplePortableDatabase.Tests
         [InlineData(" ")]
         public void SetDataTableProperties_ColumnPropertiesWithInvalidColumnName_ThrowException(string columnName)
         {
-            Database portableDatabase = new Database();
+            Database portableDatabase = new();
             portableDatabase.Initialize("TestData", ';');
 
             Action action = () =>
@@ -1346,7 +1346,7 @@ namespace SimplePortableDatabase.Tests
         [Fact]
         public void SetDataTableProperties_DuplicateColumnProperties_ThrowException()
         {
-            Database portableDatabase = new Database();
+            Database portableDatabase = new();
             portableDatabase.Initialize("TestData", ';');
 
             Action action = () =>
@@ -1367,9 +1367,9 @@ namespace SimplePortableDatabase.Tests
         [Fact]
         public void WriteDataTable_NullDataTable_ThrowException()
         {
-            DataTable table = new DataTable();
+            DataTable table = new();
 
-            Database portableDatabase = new Database();
+            Database portableDatabase = new();
             portableDatabase.Initialize("TestData", ';');
 
             Action action = () => portableDatabase.WriteDataTable(null);
@@ -1379,9 +1379,9 @@ namespace SimplePortableDatabase.Tests
         [Fact]
         public void WriteDataTable_DataTableWithNoTableName_ThrowException()
         {
-            DataTable table = new DataTable();
+            DataTable table = new();
 
-            Database portableDatabase = new Database();
+            Database portableDatabase = new();
             portableDatabase.Initialize("TestData", ';');
 
             Action action = () => portableDatabase.WriteDataTable(new DataTable());
@@ -1391,9 +1391,9 @@ namespace SimplePortableDatabase.Tests
         [Fact]
         public void WriteDataTable_DataTableWithNoColumns_ThrowException()
         {
-            DataTable table = new DataTable();
+            DataTable table = new();
 
-            Database portableDatabase = new Database();
+            Database portableDatabase = new();
             portableDatabase.Initialize("TestData", ';');
 
             Action action = () => portableDatabase.WriteDataTable(new DataTable("Data"));
@@ -1406,13 +1406,13 @@ namespace SimplePortableDatabase.Tests
             string tableName = "assets" + Guid.NewGuid();
             string filePath = Path.Combine("TestData", "Tables", tableName + ".db");
 
-            DataTable table = new DataTable(tableName);
+            DataTable table = new(tableName);
             table.Columns.Add("FolderId");
             table.Columns.Add(" ");
             
             table.AcceptChanges();
 
-            Database portableDatabase = new Database();
+            Database portableDatabase = new();
             portableDatabase.Initialize("TestData", ';');
 
             Action action = () => portableDatabase.WriteDataTable(table);
@@ -1432,7 +1432,7 @@ namespace SimplePortableDatabase.Tests
             string blobName = "blob" + Guid.NewGuid() + ".bin";
             string filePath = Path.Combine("TestData", "Blobs", blobName);
 
-            Database portableDatabase = new Database();
+            Database portableDatabase = new();
             portableDatabase.Initialize("TestData", ';');
             portableDatabase.WriteBlob(expected, blobName);
 
@@ -1441,9 +1441,9 @@ namespace SimplePortableDatabase.Tests
 
             byte[] blob;
 
-            using (FileStream fileStream = new FileStream(filePath, FileMode.Open))
+            using (FileStream fileStream = new(filePath, FileMode.Open))
             {
-                BinaryFormatter binaryFormatter = new BinaryFormatter();
+                BinaryFormatter binaryFormatter = new();
                 blob = (byte[])binaryFormatter.Deserialize(fileStream);
             }
 
@@ -1464,12 +1464,12 @@ namespace SimplePortableDatabase.Tests
             string blobName = "blob" + Guid.NewGuid() + ".bin";
             string filePath = Path.Combine("TestData", "Blobs", blobName);
 
-            Database portableDatabase = new Database();
+            Database portableDatabase = new();
             portableDatabase.Initialize("TestData", ';');
 
-            using (FileStream fileStream = new FileStream(filePath, FileMode.Create))
+            using (FileStream fileStream = new(filePath, FileMode.Create))
             {
-                BinaryFormatter binaryFormatter = new BinaryFormatter();
+                BinaryFormatter binaryFormatter = new();
                 binaryFormatter.Serialize(fileStream, expected);
             }
 
@@ -1492,7 +1492,7 @@ namespace SimplePortableDatabase.Tests
             byte[] expected = Encoding.GetEncoding(encodingName).GetBytes(message);
             string blobName = "blob" + Guid.NewGuid() + ".bin";
 
-            Database portableDatabase = new Database();
+            Database portableDatabase = new();
             portableDatabase.Initialize("TestData", ';');
             portableDatabase.WriteBlob(expected, blobName);
             byte[] blob = (byte[])portableDatabase.ReadBlob(blobName);
@@ -1507,7 +1507,7 @@ namespace SimplePortableDatabase.Tests
             string backupName = "20220108.zip";
             string filePath = Path.Combine("TestData_Backups", backupName);
             
-            Database portableDatabase = new Database();
+            Database portableDatabase = new();
             portableDatabase.Initialize("TestData", ';');
             portableDatabase.WriteBackup(new DateTime(2022, 1, 8).Date);
 
@@ -1523,6 +1523,19 @@ namespace SimplePortableDatabase.Tests
             sourceDirectories[1].Should().Be(@"TestData\Tables");
             backupDirectories[0].Should().Be(@"TestData_Backups_Test\Blobs");
             backupDirectories[1].Should().Be(@"TestData_Backups_Test\Tables");
+        }
+
+        [Fact]
+        public void EvaluateBackupRetention_ReturnBackupFileToDelete()
+        {
+            string backupName = "20220108.zip";
+            string filePath = Path.Combine("TestData_Backups", backupName);
+
+            Database portableDatabase = new();
+            portableDatabase.Initialize("TestData", ';');
+            portableDatabase.DeleteOldBackups(2);
+
+            portableDatabase.Diagnostics.LastDeletedBackupFilePath.Should().Be(filePath);
         }
     }
 

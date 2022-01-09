@@ -11,7 +11,7 @@ namespace SimplePortableDatabase
 
         internal List<T> ReadObjectList<T>(string dataFilePath, Func<string[], T> mapObjectFromCsvFields, Diagnostics diagnostics)
         {
-            List<T> list = new List<T>();
+            List<T> list = new();
             
             if (File.Exists(dataFilePath))
             {
@@ -32,10 +32,10 @@ namespace SimplePortableDatabase
 
         private List<T> GetObjectListFromCsv<T>(string csv, Func<string[], T> mapObjectFromCsvFields)
         {
-            List<T> list = new List<T>();
+            List<T> list = new();
             bool hasRecord;
 
-            using (StringReader reader = new StringReader(csv))
+            using (StringReader reader = new(csv))
             {
                 string line = reader.ReadLine();
 
@@ -80,7 +80,7 @@ namespace SimplePortableDatabase
 
         private string GetCsvFromObjectList<T>(List<T> list, string tableName, Func<T, int, object> mapCsvFieldIndexToCsvField)
         {
-            StringBuilder builder = new StringBuilder();
+            StringBuilder builder = new();
             
             if (this.Properties == null)
                 throw new Exception($"Properties must be defined for the columns in the table {tableName}.");

@@ -10,9 +10,9 @@ namespace SimplePortableDatabase
 
             if (File.Exists(binaryFilePath))
             {
-                using (FileStream fileStream = new FileStream(binaryFilePath, FileMode.Open))
+                using (FileStream fileStream = new(binaryFilePath, FileMode.Open))
                 {
-                    BinaryFormatter binaryFormatter = new BinaryFormatter();
+                    BinaryFormatter binaryFormatter = new();
                     result = binaryFormatter.Deserialize(fileStream);
                 }
             }
@@ -22,9 +22,9 @@ namespace SimplePortableDatabase
 
         internal void WriteToBinaryFile(object anObject, string binaryFilePath)
         {
-            using (FileStream fileStream = new FileStream(binaryFilePath, FileMode.Create))
+            using (FileStream fileStream = new(binaryFilePath, FileMode.Create))
             {
-                BinaryFormatter binaryFormatter = new BinaryFormatter();
+                BinaryFormatter binaryFormatter = new();
                 binaryFormatter.Serialize(fileStream, anObject);
             }
         }

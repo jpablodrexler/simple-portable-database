@@ -163,5 +163,10 @@ namespace SimplePortableDatabase
             string fileName = backupDate.ToString("yyyyMMdd") + ".zip";
             return Path.Combine(GetBackupsDirectory(dataDirectory), fileName);
         }
+
+        public void DeleteOldBackups(int backupsToKeep)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

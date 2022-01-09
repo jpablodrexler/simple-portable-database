@@ -33,10 +33,10 @@ namespace SimplePortableDatabase
 
         private DataTable GetDataTableFromCsv(string csv, string tableName)
         {
-            DataTable table = new DataTable(tableName);
+            DataTable table = new(tableName);
             bool hasRecord;
 
-            using (StringReader reader = new StringReader(csv))
+            using (StringReader reader = new(csv))
             {
                 string line = reader.ReadLine();
 
@@ -93,7 +93,7 @@ namespace SimplePortableDatabase
 
         private string GetCsvFromDataTable(DataTable table)
         {
-            StringBuilder builder = new StringBuilder();
+            StringBuilder builder = new();
 
             for (int i = 0; i < table.Columns.Count; i++)
             {

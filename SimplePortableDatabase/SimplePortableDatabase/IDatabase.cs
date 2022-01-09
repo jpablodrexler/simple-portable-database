@@ -23,5 +23,6 @@ namespace SimplePortableDatabase
         string ResolveBackupFilePath(string dataDirectory, DateTime backupDate);
         void WriteBlob(object blob, string blobName);
         void WriteBackup(DateTime backupDate);
+        void DeleteOldBackups(int backupsToKeep);
     }
 }
