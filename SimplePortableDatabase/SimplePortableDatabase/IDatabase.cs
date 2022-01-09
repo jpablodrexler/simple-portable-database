@@ -22,7 +22,7 @@ namespace SimplePortableDatabase
         string ResolveTableFilePath(string dataDirectory, string entityName);
         string ResolveBackupFilePath(string dataDirectory, DateTime backupDate);
         void WriteBlob(object blob, string blobName);
-        void WriteBackup(DateTime backupDate);
+        bool WriteBackup(DateTime backupDate);
         void DeleteOldBackups(int backupsToKeep);
     }
 }

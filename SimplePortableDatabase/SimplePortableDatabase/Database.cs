@@ -136,16 +136,19 @@ namespace SimplePortableDatabase
             blobStorage.WriteToBinaryFile(blob, blobFilePath);
         }
 
-        public void WriteBackup(DateTime backupDate)
+        public bool WriteBackup(DateTime backupDate)
         {
-            // TODO: ADD RETENTION POLICY TO KEEP THE LAST 2 OR 3 BACKUPS (BASED ON DATABASE METADATA).
+            bool written = false;
             string backupFilePath = ResolveBackupFilePath(DataDirectory, backupDate);
             
             if (!File.Exists(backupFilePath))
             {
                 Diagnostics = new Diagnostics { LastWriteFilePath = backupFilePath };
                 backupStorage.WriteToZipFile(DataDirectory, backupFilePath);
+                written = true;
             }
+
+            return written;
         }
 
         public void InitializeDirectory(string dataDirectory)

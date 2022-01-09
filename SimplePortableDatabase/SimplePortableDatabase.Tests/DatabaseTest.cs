@@ -1602,8 +1602,9 @@ namespace SimplePortableDatabase.Tests
                 new BlobStorage(),
                 new BackupStorage());
             portableDatabase.Initialize("TestData", ';');
-            portableDatabase.WriteBackup(new DateTime(2022, 1, 8).Date);
+            bool result = portableDatabase.WriteBackup(new DateTime(2022, 1, 8).Date);
 
+            result.Should().BeTrue();
             portableDatabase.Diagnostics.LastWriteFilePath.Should().Be(filePath);
 
             ZipFile.ExtractToDirectory(filePath, "TestData_Backups_Test");
