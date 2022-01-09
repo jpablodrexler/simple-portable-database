@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace SimplePortableDatabase
+namespace SimplePortableDatabase.Storage
 {
     internal class ObjectListStorage : BaseCsvStorage
     {

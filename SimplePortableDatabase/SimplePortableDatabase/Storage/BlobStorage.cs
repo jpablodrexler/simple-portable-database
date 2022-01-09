@@ -1,6 +1,6 @@
 ﻿using System.Runtime.Serialization.Formatters.Binary;
 
-namespace SimplePortableDatabase
+namespace SimplePortableDatabase.Storage
 {
     internal class BlobStorage
     {

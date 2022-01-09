@@ -1,7 +1,7 @@
 ﻿using System.Data;
 using System.Text;
 
-namespace SimplePortableDatabase
+namespace SimplePortableDatabase.Storage
 {
     internal class DataTableStorage : BaseCsvStorage
     {

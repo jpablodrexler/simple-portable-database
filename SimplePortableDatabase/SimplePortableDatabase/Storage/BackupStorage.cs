@@ -1,6 +1,6 @@
 ﻿using System.IO.Compression;
 
-namespace SimplePortableDatabase
+namespace SimplePortableDatabase.Storage
 {
     internal class BackupStorage
     {

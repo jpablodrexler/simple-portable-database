@@ -1,4 +1,4 @@
-﻿namespace SimplePortableDatabase
+﻿namespace SimplePortableDatabase.Storage
 {
     internal abstract class BaseCsvStorage
     {
