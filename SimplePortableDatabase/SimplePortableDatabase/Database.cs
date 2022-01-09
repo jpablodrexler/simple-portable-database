@@ -8,16 +8,38 @@ namespace SimplePortableDatabase
         private const string DATA_FILE_FORMAT = "{0}.db";
 
         public string DataDirectory { get; private set; }
+        public string TablesDirectory { get; private set; }
+        public string BlobsDirectory { get; private set; }
+        public string BackupsDirectory { get; private set; }
         public char Separator { get; private set; }
         public Diagnostics Diagnostics { get; private set; }
 
         private Dictionary<string, DataTableProperties> dataTablePropertiesDictionary;
 
+        private readonly IObjectListStorage objectListStorage;
+        private readonly IDataTableStorage dataTableStorage;
+        private readonly IBlobStorage blobStorage;
+        private readonly IBackupStorage backupStorage;
+
+        public Database(IObjectListStorage objectListStorage,
+            IDataTableStorage dataTableStorage,
+            IBlobStorage blobStorage,
+            IBackupStorage backupStorage)
+        {
+            this.objectListStorage = objectListStorage;
+            this.dataTableStorage = dataTableStorage;
+            this.blobStorage = blobStorage;
+            this.backupStorage = backupStorage;
+        }
+
         public void Initialize(string dataDirectory, char separator)
         {
-            this.DataDirectory = dataDirectory;
-            this.Separator = separator;
-            this.dataTablePropertiesDictionary = new Dictionary<string, DataTableProperties>();
+            DataDirectory = dataDirectory;
+            TablesDirectory = GetTablesDirectory(dataDirectory);
+            BlobsDirectory = GetBlobsDirectory(dataDirectory);
+            BackupsDirectory = GetBackupsDirectory(dataDirectory);
+            Separator = separator;
+            dataTablePropertiesDictionary = new Dictionary<string, DataTableProperties>();
             InitializeDirectory(dataDirectory);
         }
 
@@ -42,24 +64,26 @@ namespace SimplePortableDatabase
 
         public DataTable ReadDataTable(string tableName)
         {
-            string dataFilePath = ResolveTableFilePath(this.DataDirectory, tableName);
-            this.Diagnostics = new Diagnostics { LastReadFilePath = dataFilePath };
+            string dataFilePath = ResolveTableFilePath(DataDirectory, tableName);
+            Diagnostics = new Diagnostics { LastReadFilePath = dataFilePath };
             DataTableProperties properties = GetDataTableProperties(tableName);
-            return new DataTableStorage(properties, this.Separator).ReadDataTable(dataFilePath, tableName, this.Diagnostics);
+            dataTableStorage.Initialize(properties, Separator);
+            return dataTableStorage.ReadDataTable(dataFilePath, tableName, Diagnostics);
         }
 
         private DataTableProperties GetDataTableProperties(string tableName)
         {
-            return this.dataTablePropertiesDictionary.ContainsKey(tableName) ?
-                this.dataTablePropertiesDictionary[tableName] : null;
+            return dataTablePropertiesDictionary.ContainsKey(tableName) ?
+                dataTablePropertiesDictionary[tableName] : null;
         }
 
         public List<T> ReadObjectList<T>(string tableName, Func<string[], T> mapObjectFromCsvFields)
         {
-            string dataFilePath = ResolveTableFilePath(this.DataDirectory, tableName);
-            this.Diagnostics = new Diagnostics { LastReadFilePath = dataFilePath };
+            string dataFilePath = ResolveTableFilePath(DataDirectory, tableName);
+            Diagnostics = new Diagnostics { LastReadFilePath = dataFilePath };
             DataTableProperties properties = GetDataTableProperties(tableName);
-            return new ObjectListStorage(properties, this.Separator).ReadObjectList(dataFilePath, mapObjectFromCsvFields, this.Diagnostics);
+            objectListStorage.Initialize(properties, Separator);
+            return objectListStorage.ReadObjectList(dataFilePath, mapObjectFromCsvFields, Diagnostics);
         }
 
         public void WriteDataTable(DataTable dataTable)
@@ -76,10 +100,11 @@ namespace SimplePortableDatabase
                     throw new ArgumentException("All columns should have a name.", nameof(dataTable));
             }
 
-            string dataFilePath = ResolveTableFilePath(this.DataDirectory, dataTable.TableName);
-            this.Diagnostics = new Diagnostics { LastWriteFilePath = dataFilePath };
+            string dataFilePath = ResolveTableFilePath(DataDirectory, dataTable.TableName);
+            Diagnostics = new Diagnostics { LastWriteFilePath = dataFilePath };
             DataTableProperties properties = GetDataTableProperties(dataTable.TableName);
-            new DataTableStorage(properties, this.Separator).WriteDataTable(dataFilePath, dataTable, this.Diagnostics);
+            dataTableStorage.Initialize(properties, Separator);
+            dataTableStorage.WriteDataTable(dataFilePath, dataTable, Diagnostics);
         }
 
         public void WriteObjectList<T>(List<T> list, string tableName, Func<T, int, object> mapCsvFieldIndexToCsvField)
@@ -90,45 +115,46 @@ namespace SimplePortableDatabase
             if (string.IsNullOrWhiteSpace(tableName))
                 throw new ArgumentNullException(nameof(tableName));
 
-            string dataFilePath = ResolveTableFilePath(this.DataDirectory, tableName);
-            this.Diagnostics = new Diagnostics { LastWriteFilePath = dataFilePath };
+            string dataFilePath = ResolveTableFilePath(DataDirectory, tableName);
+            Diagnostics = new Diagnostics { LastWriteFilePath = dataFilePath };
             DataTableProperties properties = GetDataTableProperties(tableName);
-            new ObjectListStorage(properties, this.Separator).WriteObjectList(dataFilePath, list, tableName, mapCsvFieldIndexToCsvField, this.Diagnostics);
+            objectListStorage.Initialize(properties, Separator);
+            objectListStorage.WriteObjectList(dataFilePath, list, tableName, mapCsvFieldIndexToCsvField, Diagnostics);
         }
 
         public object ReadBlob(string blobName)
         {
-            string blobFilePath = ResolveBlobFilePath(this.DataDirectory, blobName);
-            this.Diagnostics = new Diagnostics { LastReadFilePath = blobFilePath };
-            return new BlobStorage().ReadFromBinaryFile(blobFilePath);
+            string blobFilePath = ResolveBlobFilePath(DataDirectory, blobName);
+            Diagnostics = new Diagnostics { LastReadFilePath = blobFilePath };
+            return blobStorage.ReadFromBinaryFile(blobFilePath);
         }
 
         public void WriteBlob(object blob, string blobName)
         {
-            string blobFilePath = ResolveBlobFilePath(this.DataDirectory, blobName);
-            this.Diagnostics = new Diagnostics { LastWriteFilePath = blobFilePath, LastWriteFileRaw = blob };
-            new BlobStorage().WriteToBinaryFile(blob, blobFilePath);
+            string blobFilePath = ResolveBlobFilePath(DataDirectory, blobName);
+            Diagnostics = new Diagnostics { LastWriteFilePath = blobFilePath, LastWriteFileRaw = blob };
+            blobStorage.WriteToBinaryFile(blob, blobFilePath);
         }
 
         public void WriteBackup(DateTime backupDate)
         {
             // TODO: ADD RETENTION POLICY TO KEEP THE LAST 2 OR 3 BACKUPS (BASED ON DATABASE METADATA).
-            string backupFilePath = ResolveBackupFilePath(this.DataDirectory, backupDate);
+            string backupFilePath = ResolveBackupFilePath(DataDirectory, backupDate);
             
             if (!File.Exists(backupFilePath))
             {
-                this.Diagnostics = new Diagnostics { LastWriteFilePath = backupFilePath };
-                new BackupStorage().WriteToZipFile(this.DataDirectory, backupFilePath);
+                Diagnostics = new Diagnostics { LastWriteFilePath = backupFilePath };
+                backupStorage.WriteToZipFile(DataDirectory, backupFilePath);
             }
         }
 
         public void InitializeDirectory(string dataDirectory)
         {
             Directory.CreateDirectory(dataDirectory);
-            Directory.CreateDirectory(GetTablesDirectory(dataDirectory));
-            Directory.CreateDirectory(GetBlobsDirectory(dataDirectory));
+            Directory.CreateDirectory(TablesDirectory);
+            Directory.CreateDirectory(BlobsDirectory);
             // TODO: THE BACKUP DIRECTORY SHOULD BE INDEPENDENTLY CONFIGURED FROM THE DATA DIRECTORY, IN THE APPSETTINGS.JSON FILE.
-            Directory.CreateDirectory(GetBackupsDirectory(dataDirectory));
+            Directory.CreateDirectory(BackupsDirectory);
         }
 
         public string GetTablesDirectory(string dataDirectory)
@@ -167,7 +193,17 @@ namespace SimplePortableDatabase
 
         public void DeleteOldBackups(int backupsToKeep)
         {
-            throw new NotImplementedException();
+            string[] files = backupStorage.GetBackupFiles(BackupsDirectory);
+            files = files.OrderBy(f => f).ToArray();
+            List<string> deletedBackupFilePaths = new();
+
+            for (int i = 0; i < files.Length - backupsToKeep; i++)
+            {
+                backupStorage.DeleteBackupFile(files[i]);
+                deletedBackupFilePaths.Add(files[i]);
+            }
+
+            Diagnostics = new Diagnostics { LastDeletedBackupFilePaths = deletedBackupFilePaths.ToArray() };
         }
     }
 }

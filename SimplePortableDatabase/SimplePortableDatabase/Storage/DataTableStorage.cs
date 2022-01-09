@@ -3,14 +3,9 @@ using System.Text;
 
 namespace SimplePortableDatabase.Storage
 {
-    internal class DataTableStorage : BaseCsvStorage
+    public class DataTableStorage : BaseCsvStorage, IDataTableStorage
     {
-        internal DataTableStorage(DataTableProperties properties, char separator) : base(properties, separator)
-        {
-
-        }
-
-        internal DataTable ReadDataTable(string dataFilePath, string tableName, Diagnostics diagnostics)
+        public DataTable ReadDataTable(string dataFilePath, string tableName, Diagnostics diagnostics)
         {
             DataTable dataTable = null;
             
@@ -18,15 +13,15 @@ namespace SimplePortableDatabase.Storage
             {
                 string csv = File.ReadAllText(dataFilePath);
                 diagnostics.LastReadFileRaw = csv;
-                dataTable = this.GetDataTableFromCsv(csv, tableName);
+                dataTable = GetDataTableFromCsv(csv, tableName);
             }
 
             return dataTable;
         }
 
-        internal void WriteDataTable(string dataFilePath, DataTable dataTable, Diagnostics diagnostics)
+        public void WriteDataTable(string dataFilePath, DataTable dataTable, Diagnostics diagnostics)
         {
-            string csv = this.GetCsvFromDataTable(dataTable);
+            string csv = GetCsvFromDataTable(dataTable);
             diagnostics.LastWriteFileRaw = csv;
             File.WriteAllText(dataFilePath, csv);
         }
@@ -40,7 +35,7 @@ namespace SimplePortableDatabase.Storage
             {
                 string line = reader.ReadLine();
 
-                if (this.Properties != null)
+                if (Properties != null)
                 {
                     string[] headers = GetValuesFromCsvLine(line);
 
@@ -64,7 +59,7 @@ namespace SimplePortableDatabase.Storage
                 }
                 else
                 {
-                    string[] headers = line.Split(this.Separator);
+                    string[] headers = line.Split(Separator);
 
                     foreach (string header in headers)
                     {
@@ -78,7 +73,7 @@ namespace SimplePortableDatabase.Storage
 
                         if (hasRecord)
                         {
-                            string[] fields = line.Split(this.Separator);
+                            string[] fields = line.Split(Separator);
                             table.Rows.Add(fields);
                         }
                     }
@@ -109,7 +104,7 @@ namespace SimplePortableDatabase.Storage
                 }
 
                 if (i < table.Columns.Count - 1)
-                    builder.Append(this.Separator);
+                    builder.Append(Separator);
             }
 
             builder.Append(Environment.NewLine);
@@ -132,7 +127,7 @@ namespace SimplePortableDatabase.Storage
                     }
 
                     if (j < table.Columns.Count - 1)
-                        builder.Append(this.Separator);
+                        builder.Append(Separator);
                 }
 
                 builder.Append(Environment.NewLine);

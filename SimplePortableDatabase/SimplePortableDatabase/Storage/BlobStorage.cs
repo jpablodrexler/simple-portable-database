@@ -2,9 +2,9 @@
 
 namespace SimplePortableDatabase.Storage
 {
-    internal class BlobStorage
+    public class BlobStorage : IBlobStorage
     {
-        internal object ReadFromBinaryFile(string binaryFilePath)
+        public object ReadFromBinaryFile(string binaryFilePath)
         {
             object result = null;
 
@@ -20,7 +20,7 @@ namespace SimplePortableDatabase.Storage
             return result;
         }
 
-        internal void WriteToBinaryFile(object anObject, string binaryFilePath)
+        public void WriteToBinaryFile(object anObject, string binaryFilePath)
         {
             using (FileStream fileStream = new(binaryFilePath, FileMode.Create))
             {

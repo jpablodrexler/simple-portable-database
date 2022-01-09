@@ -2,11 +2,21 @@
 
 namespace SimplePortableDatabase.Storage
 {
-    internal class BackupStorage
+    public class BackupStorage : IBackupStorage
     {
-        internal void WriteToZipFile(string dataDirectory, string backupFilePath)
+        public string[] GetBackupFiles(string backupDirectory)
+        {
+            return Directory.GetFiles(backupDirectory);
+        }
+
+        public void WriteToZipFile(string dataDirectory, string backupFilePath)
         {
             ZipFile.CreateFromDirectory(dataDirectory, backupFilePath);
+        }
+
+        public void DeleteBackupFile(string backupFilePath)
+        {
+            File.Delete(backupFilePath);
         }
     }
 }
