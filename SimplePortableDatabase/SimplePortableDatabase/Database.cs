@@ -111,6 +111,7 @@ namespace SimplePortableDatabase
 
         public void WriteBackup(DateTime backupDate)
         {
+            // TODO: ADD RETENTION POLICY TO KEEP THE LAST 2 OR 3 BACKUPS (BASED ON DATABASE METADATA).
             string backupFilePath = ResolveBackupFilePath(this.DataDirectory, backupDate);
             
             if (!File.Exists(backupFilePath))
