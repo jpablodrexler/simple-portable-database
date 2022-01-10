@@ -1,35 +1,35 @@
-﻿namespace SimplePortableDatabase
+﻿namespace SimplePortableDatabase.Storage
 {
-    internal abstract class BaseCsvStorage
+    public abstract class BaseCsvStorage
     {
         protected const string QUOTE = "\"";
         protected DataTableProperties Properties { get; set; }
         protected char Separator { get; set; }
 
-        internal BaseCsvStorage(DataTableProperties properties, char separator)
+        public void Initialize(DataTableProperties properties, char separator)
         {
-            this.Properties = properties;
-            this.Separator = separator;
+            Properties = properties;
+            Separator = separator;
         }
 
         protected string[] GetValuesFromCsvLine(string line)
         {
-            string[] fields = new string[this.Properties.ColumnProperties.Length];
+            string[] fields = new string[Properties.ColumnProperties.Length];
             int startIndex = 0;
             int endIndex;
 
-            for (int i = 0; i < this.Properties.ColumnProperties.Length; i++)
+            for (int i = 0; i < Properties.ColumnProperties.Length; i++)
             {
-                bool escapeText = EscapeText(this.Properties.ColumnProperties[i].ColumnName);
+                bool escapeText = EscapeText(Properties.ColumnProperties[i].ColumnName);
 
                 if (escapeText)
                 {
-                    endIndex = line.IndexOf(QUOTE + this.Separator, startIndex);
+                    endIndex = line.IndexOf(QUOTE + Separator, startIndex);
                     startIndex++;
                 }
                 else
                 {
-                    endIndex = line.IndexOf(this.Separator, startIndex);
+                    endIndex = line.IndexOf(Separator, startIndex);
                 }
 
                 if (endIndex >= 0 && (endIndex < (line.Length - 1)))
@@ -50,7 +50,7 @@
 
         protected bool EscapeText(string columnName)
         {
-            bool? result = this.Properties?.ColumnProperties.Any(c => string.Compare(c.ColumnName, columnName, StringComparison.OrdinalIgnoreCase) == 0 && c.EscapeText);
+            bool? result = Properties?.ColumnProperties.Any(c => string.Compare(c.ColumnName, columnName, StringComparison.OrdinalIgnoreCase) == 0 && c.EscapeText);
 
             return result.HasValue && result.Value;
         }

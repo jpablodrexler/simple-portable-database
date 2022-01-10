@@ -1,16 +1,11 @@
 ﻿using System.Data;
 using System.Text;
 
-namespace SimplePortableDatabase
+namespace SimplePortableDatabase.Storage
 {
-    internal class DataTableStorage : BaseCsvStorage
+    public class DataTableStorage : BaseCsvStorage, IDataTableStorage
     {
-        internal DataTableStorage(DataTableProperties properties, char separator) : base(properties, separator)
-        {
-
-        }
-
-        internal DataTable ReadDataTable(string dataFilePath, string tableName, Diagnostics diagnostics)
+        public DataTable ReadDataTable(string dataFilePath, string tableName, Diagnostics diagnostics)
         {
             DataTable dataTable = null;
             
@@ -18,29 +13,29 @@ namespace SimplePortableDatabase
             {
                 string csv = File.ReadAllText(dataFilePath);
                 diagnostics.LastReadFileRaw = csv;
-                dataTable = this.GetDataTableFromCsv(csv, tableName);
+                dataTable = GetDataTableFromCsv(csv, tableName);
             }
 
             return dataTable;
         }
 
-        internal void WriteDataTable(string dataFilePath, DataTable dataTable, Diagnostics diagnostics)
+        public void WriteDataTable(string dataFilePath, DataTable dataTable, Diagnostics diagnostics)
         {
-            string csv = this.GetCsvFromDataTable(dataTable);
+            string csv = GetCsvFromDataTable(dataTable);
             diagnostics.LastWriteFileRaw = csv;
             File.WriteAllText(dataFilePath, csv);
         }
 
         private DataTable GetDataTableFromCsv(string csv, string tableName)
         {
-            DataTable table = new DataTable(tableName);
+            DataTable table = new(tableName);
             bool hasRecord;
 
-            using (StringReader reader = new StringReader(csv))
+            using (StringReader reader = new(csv))
             {
                 string line = reader.ReadLine();
 
-                if (this.Properties != null)
+                if (Properties != null)
                 {
                     string[] headers = GetValuesFromCsvLine(line);
 
@@ -64,7 +59,7 @@ namespace SimplePortableDatabase
                 }
                 else
                 {
-                    string[] headers = line.Split(this.Separator);
+                    string[] headers = line.Split(Separator);
 
                     foreach (string header in headers)
                     {
@@ -78,7 +73,7 @@ namespace SimplePortableDatabase
 
                         if (hasRecord)
                         {
-                            string[] fields = line.Split(this.Separator);
+                            string[] fields = line.Split(Separator);
                             table.Rows.Add(fields);
                         }
                     }
@@ -93,7 +88,7 @@ namespace SimplePortableDatabase
 
         private string GetCsvFromDataTable(DataTable table)
         {
-            StringBuilder builder = new StringBuilder();
+            StringBuilder builder = new();
 
             for (int i = 0; i < table.Columns.Count; i++)
             {
@@ -109,7 +104,7 @@ namespace SimplePortableDatabase
                 }
 
                 if (i < table.Columns.Count - 1)
-                    builder.Append(this.Separator);
+                    builder.Append(Separator);
             }
 
             builder.Append(Environment.NewLine);
@@ -132,7 +127,7 @@ namespace SimplePortableDatabase
                     }
 
                     if (j < table.Columns.Count - 1)
-                        builder.Append(this.Separator);
+                        builder.Append(Separator);
                 }
 
                 builder.Append(Environment.NewLine);
