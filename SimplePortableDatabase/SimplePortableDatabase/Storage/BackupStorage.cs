@@ -11,7 +11,7 @@ namespace SimplePortableDatabase.Storage
 
         public void WriteToZipFile(string dataDirectory, string backupFilePath)
         {
-            ZipFile.CreateFromDirectory(dataDirectory, backupFilePath);
+            ZipFile.CreateFromDirectory(dataDirectory, backupFilePath, CompressionLevel.NoCompression, false);
         }
 
         public void DeleteBackupFile(string backupFilePath)
