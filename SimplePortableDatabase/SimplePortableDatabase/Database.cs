@@ -141,7 +141,7 @@ namespace SimplePortableDatabase
             bool written = false;
             string backupFilePath = ResolveBackupFilePath(DataDirectory, backupDate);
             
-            if (!File.Exists(backupFilePath))
+            if (!BackupExists(backupDate))
             {
                 Diagnostics = new Diagnostics { LastWriteFilePath = backupFilePath };
                 backupStorage.WriteToZipFile(DataDirectory, backupFilePath);
@@ -151,12 +151,17 @@ namespace SimplePortableDatabase
             return written;
         }
 
+        public bool BackupExists(DateTime backupDate)
+        {
+            string backupFilePath = ResolveBackupFilePath(DataDirectory, backupDate);
+            return File.Exists(backupFilePath);
+        }
+
         public void InitializeDirectory(string dataDirectory)
         {
             Directory.CreateDirectory(dataDirectory);
             Directory.CreateDirectory(TablesDirectory);
             Directory.CreateDirectory(BlobsDirectory);
-            // TODO: THE BACKUP DIRECTORY SHOULD BE INDEPENDENTLY CONFIGURED FROM THE DATA DIRECTORY, IN THE APPSETTINGS.JSON FILE.
             Directory.CreateDirectory(BackupsDirectory);
         }
 
