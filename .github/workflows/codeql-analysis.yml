@@ -56,9 +56,9 @@ jobs:
       with:
         dotnet-version: 6.0.x
     - name: Restore dependencies
-      run: dotnet restore JPPhotoManager/JPPhotoManager.sln
+      run: dotnet restore SimplePortableDatabase/SimplePortableDatabase.sln
     - name: Build
-      run: dotnet build --no-restore --configuration Release JPPhotoManager/JPPhotoManager.sln
+      run: dotnet build --no-restore --configuration Release SimplePortableDatabase/SimplePortableDatabase.sln
 
     # ℹ️ Command-line programs to run using the OS shell.
     # 📚 https://git.io/JvXDl
