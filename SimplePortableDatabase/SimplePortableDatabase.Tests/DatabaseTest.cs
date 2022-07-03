@@ -1657,6 +1657,40 @@ namespace SimplePortableDatabase.Tests
             mock.Mock<IBackupStorage>().Verify(b => b.DeleteBackupFile(@"TestData_Backups\20220107.zip"), Times.Never);
             mock.Mock<IBackupStorage>().Verify(b => b.DeleteBackupFile(@"TestData_Backups\20220108.zip"), Times.Never);
         }
+
+        [Fact]
+        public void GetBackupDates()
+        {
+            string backupName = "20220108.zip";
+            string filePath = Path.Combine("TestData_Backups", backupName);
+
+            using var mock = AutoMock.GetLoose();
+
+            mock.Mock<IBackupStorage>()
+                .Setup(b => b.GetBackupFiles(It.IsAny<string>()))
+                .Returns(new[]
+                {
+                    @"TestData_Backups\20220104.zip",
+                    @"TestData_Backups\20220105.zip",
+                    @"TestData_Backups\20220107.zip",
+                    @"TestData_Backups\20220106.zip",
+                    @"TestData_Backups\20220108.zip"
+                });
+
+            IBackupStorage backupStorage = mock.Mock<IBackupStorage>().Object;
+            IDatabase portableDatabase = new Database(new ObjectListStorage(),
+                new DataTableStorage(),
+                new BlobStorage(),
+                backupStorage);
+            portableDatabase.Initialize("TestData", ';');
+            var backupDates = portableDatabase.GetBackupDates();
+            backupDates.Should().HaveCount(5);
+            backupDates[0].Date.Should().Be(new DateTime(2022, 1, 4));
+            backupDates[1].Date.Should().Be(new DateTime(2022, 1, 5));
+            backupDates[2].Date.Should().Be(new DateTime(2022, 1, 6));
+            backupDates[3].Date.Should().Be(new DateTime(2022, 1, 7));
+            backupDates[4].Date.Should().Be(new DateTime(2022, 1, 8));
+        }
     }
 
     public class TestRecord

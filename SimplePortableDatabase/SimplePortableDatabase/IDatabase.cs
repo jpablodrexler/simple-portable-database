@@ -24,6 +24,7 @@ namespace SimplePortableDatabase
         void WriteBlob(object blob, string blobName);
         bool WriteBackup(DateTime backupDate);
         bool BackupExists(DateTime backupDate);
+        DateTime[] GetBackupDates();
         void DeleteOldBackups(int backupsToKeep);
     }
 }

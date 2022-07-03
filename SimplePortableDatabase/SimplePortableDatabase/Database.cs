@@ -1,5 +1,6 @@
 ﻿using SimplePortableDatabase.Storage;
 using System.Data;
+using System.Globalization;
 
 namespace SimplePortableDatabase
 {
@@ -197,6 +198,17 @@ namespace SimplePortableDatabase
             dataDirectory = !string.IsNullOrEmpty(dataDirectory) ? dataDirectory : string.Empty;
             string fileName = backupDate.ToString("yyyyMMdd") + ".zip";
             return Path.Combine(GetBackupsDirectory(dataDirectory), fileName);
+        }
+
+        public DateTime[] GetBackupDates()
+        {
+            string[] files = backupStorage.GetBackupFiles(BackupsDirectory);
+
+            return files
+                .Select(f => Path.GetFileName(f))
+                .Select(f => DateTime.ParseExact(f.Replace(".zip", ""), "yyyyMMdd", CultureInfo.InvariantCulture))
+                .OrderBy(f => f)
+                .ToArray();
         }
 
         public void DeleteOldBackups(int backupsToKeep)
