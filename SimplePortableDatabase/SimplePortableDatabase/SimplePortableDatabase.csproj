@@ -5,7 +5,7 @@
 	<ImplicitUsings>enable</ImplicitUsings>
 	<Nullable>enable</Nullable>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.0.0</Version>
+    <Version>1.1.0.0</Version>
     <Authors>Juan Pablo Drexler</Authors>
     <Company />
     <Product>Simple Portable Database</Product>
@@ -15,7 +15,7 @@
     <PackageTags>database csv portable</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/jpablodrexler/simple-portable-database</PackageProjectUrl>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
     <PackageReleaseNotes>Adds feature to backup data to zip files.</PackageReleaseNotes>
     <Copyright>Copyright (c) 2020-2022 Juan Pablo Drexler</Copyright>
   </PropertyGroup>
